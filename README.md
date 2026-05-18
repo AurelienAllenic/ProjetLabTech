@@ -116,6 +116,89 @@ npm start
 
 L'application sera accessible sur `http://localhost:3000`
 
+## 🧪 Tests
+
+Le frontend utilise **Vitest** + **Testing Library** pour les tests unitaires et d'intégration.
+
+### Structure des tests
+
+```
+FRONT/src/test/
+├── setup.ts                        # Configuration globale (jest-dom)
+├── unit/                           # Tests unitaires — composants isolés
+│   ├── UiButton.test.tsx
+│   ├── Card.test.tsx
+│   ├── Header.test.tsx
+│   ├── Footer.test.tsx
+│   └── TestValueCard.test.tsx
+└── integration/                    # Tests d'intégration — flux complets
+    ├── Upload.test.tsx
+    ├── Manual.test.tsx
+    ├── ManualValues.test.tsx
+    └── LabResultsPage.test.tsx
+```
+
+### Lancer les tests
+
+```bash
+cd FRONT
+
+# Lancer tous les tests une fois (mode CI)
+npm run test
+
+# Lancer en mode watch (développement)
+npm run test:watch
+
+# Générer un rapport de couverture (HTML dans FRONT/coverage/)
+npm run test:coverage
+
+# Tout vérifier d'un coup : lint + tests + build
+npm run ci
+```
+
+### CI/CD — GitHub Actions
+
+À chaque `push` ou `pull request`, la pipeline `.github/workflows/ci.yml` exécute automatiquement :
+
+1. **Lint** (`eslint`) — vérifie la qualité du code TypeScript
+2. **Tests** (49 tests) — unitaires et intégration
+3. **Build** (`vite build`) — vérifie que la production compile
+
+> Le déploiement Vercel ne se déclenche qu'après que ces 3 étapes soient passées avec succès.
+
+---
+
+## 🚀 Déploiement
+
+### Frontend — Vercel
+
+Le fichier `vercel.json` à la racine configure le déploiement :
+
+```json
+{
+  "buildCommand": "cd FRONT && npm install && npm run build",
+  "outputDirectory": "FRONT/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+}
+```
+
+**Variables d'environnement Vercel** (Project Settings → Environment Variables) :
+
+| Variable | Description |
+|---|---|
+| `VITE_API_URL` | URL du backend (ex: `https://ton-backend.up.railway.app`) |
+
+### Backend — Railway / Render
+
+Le backend Express (`backend/`) ne peut pas tourner sur Vercel (serverless). Déployer sur Railway ou Render :
+
+```bash
+# Démarrage
+cd backend && npm start
+```
+
+---
+
 ## 📱 Utilisation
 
 1. **Nouvelle analyse** : Cliquer sur "Nouvelle analyse" et saisir les résultats ou uploader un fichier PDF
