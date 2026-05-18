@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import type * as ReactRouterDom from "react-router-dom";
 import ManualValues from "../../pages/ManualValues";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("react-router-dom")>();
+  const actual = await importOriginal<typeof ReactRouterDom>();
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
@@ -56,7 +57,9 @@ describe("Page ManualValues — intégration", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /analyser/i }));
 
-    const stored = JSON.parse(localStorage.getItem("analysisResult")!);
+    const raw = localStorage.getItem("analysisResult");
+    if (!raw) throw new Error("Aucun résultat dans localStorage");
+    const stored = JSON.parse(raw) as { result: { elements: Array<{ categorie: string }> } };
     expect(stored.result.elements[0].categorie).toBe("normal");
   });
 
@@ -69,7 +72,9 @@ describe("Page ManualValues — intégration", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /analyser/i }));
 
-    const stored = JSON.parse(localStorage.getItem("analysisResult")!);
+    const raw = localStorage.getItem("analysisResult");
+    if (!raw) throw new Error("Aucun résultat dans localStorage");
+    const stored = JSON.parse(raw) as { result: { elements: Array<{ categorie: string }> } };
     expect(stored.result.elements[0].categorie).toBe("abnormal");
   });
 });

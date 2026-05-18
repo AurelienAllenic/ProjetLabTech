@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import type * as ReactRouterDom from "react-router-dom";
 import Manual from "../../pages/Manual";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("react-router-dom")>();
+  const actual = await importOriginal<typeof ReactRouterDom>();
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
@@ -35,7 +36,6 @@ describe("Page Manual — intégration", () => {
   it("ajoute un test en cliquant sur un test courant", () => {
     renderPage();
     fireEvent.click(screen.getByRole("button", { name: /ajouter le test hémoglobine/i }));
-    // Après ajout, il existe un <span class="text-sm"> contenant "Hémoglobine" dans la liste
     const spans = screen.getAllByText("Hémoglobine");
     const inList = spans.find((el) => el.tagName === "SPAN" && el.className.includes("text-sm"));
     expect(inList).toBeDefined();
@@ -44,12 +44,10 @@ describe("Page Manual — intégration", () => {
   it("supprime un test ajouté", () => {
     renderPage();
     fireEvent.click(screen.getByRole("button", { name: /ajouter le test glucose/i }));
-    // Vérifie que le span dans la liste contient Glucose
     const listSpans = screen.getAllByText("Glucose");
     expect(listSpans.some((el) => el.tagName === "SPAN")).toBe(true);
 
     fireEvent.click(screen.getByRole("button", { name: /supprimer le test glucose/i }));
-    // Après suppression il ne reste que le bouton courant (dans common tests)
     const remaining = screen.getAllByText("Glucose");
     expect(remaining.every((el) => el.closest("button[aria-label*='Ajouter']") !== null)).toBe(true);
   });

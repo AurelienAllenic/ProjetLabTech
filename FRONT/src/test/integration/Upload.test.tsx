@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import type * as ReactRouterDom from "react-router-dom";
 import Upload from "../../pages/Upload";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("react-router-dom")>();
+  const actual = await importOriginal<typeof ReactRouterDom>();
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// GSAP n'existe pas dans jsdom
 vi.mock("../../hooks/useScrollAnimations", () => ({ useScrollAnimations: () => undefined }));
 
 const renderPage = () =>
@@ -43,7 +43,8 @@ describe("Page Upload — intégration", () => {
 
   it("affiche le bouton Analyser après sélection d'un fichier", async () => {
     renderPage();
-    const input = document.querySelector<HTMLInputElement>("#file-upload")!;
+    const input = document.querySelector<HTMLInputElement>("#file-upload");
+    if (!input) throw new Error("Input #file-upload introuvable");
     const file = new File(["contenu"], "rapport.pdf", { type: "application/pdf" });
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -54,7 +55,8 @@ describe("Page Upload — intégration", () => {
 
   it("affiche le bouton Supprimer après sélection d'un fichier", async () => {
     renderPage();
-    const input = document.querySelector<HTMLInputElement>("#file-upload")!;
+    const input = document.querySelector<HTMLInputElement>("#file-upload");
+    if (!input) throw new Error("Input #file-upload introuvable");
     const file = new File(["contenu"], "rapport.pdf", { type: "application/pdf" });
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -65,7 +67,8 @@ describe("Page Upload — intégration", () => {
 
   it("supprime le fichier et masque le bouton Analyser", async () => {
     renderPage();
-    const input = document.querySelector<HTMLInputElement>("#file-upload")!;
+    const input = document.querySelector<HTMLInputElement>("#file-upload");
+    if (!input) throw new Error("Input #file-upload introuvable");
     const file = new File(["contenu"], "rapport.pdf", { type: "application/pdf" });
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -90,7 +93,8 @@ describe("Page Upload — intégration", () => {
     );
 
     renderPage();
-    const input = document.querySelector<HTMLInputElement>("#file-upload")!;
+    const input = document.querySelector<HTMLInputElement>("#file-upload");
+    if (!input) throw new Error("Input #file-upload introuvable");
     const file = new File(["contenu"], "rapport.pdf", { type: "application/pdf" });
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -113,7 +117,8 @@ describe("Page Upload — intégration", () => {
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => undefined);
 
     renderPage();
-    const input = document.querySelector<HTMLInputElement>("#file-upload")!;
+    const input = document.querySelector<HTMLInputElement>("#file-upload");
+    if (!input) throw new Error("Input #file-upload introuvable");
     fireEvent.change(input, { target: { files: [new File(["x"], "x.pdf", { type: "application/pdf" })] } });
 
     await waitFor(() =>
