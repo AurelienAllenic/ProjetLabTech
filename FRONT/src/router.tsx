@@ -1,5 +1,5 @@
-import { createBrowserRouter, Outlet } from "react-router-dom";
-import ScrollToTop from "./components/ScrollToTop";
+import { createBrowserRouter } from "react-router-dom";
+import RootLayout from "./components/RootLayout";
 import LabIALanding from "./pages/LabIALanding";
 import LabResultsPage from "./pages/LabResultsPage";
 import Upload from "./pages/Upload";
@@ -9,15 +9,6 @@ import Help from "./pages/Help";
 import MentionsLegales from "./pages/MentionsLegales";
 import Confidentialite from "./pages/Confidentialite";
 import Cookies from "./pages/Cookies";
-
-function RootLayout() {
-  return (
-    <>
-      <ScrollToTop />
-      <Outlet />
-    </>
-  );
-}
 
 export const router = createBrowserRouter([
   {
