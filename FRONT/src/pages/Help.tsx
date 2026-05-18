@@ -3,7 +3,9 @@ import type { ElementType } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
-import { ChevronDown, Upload, FileText, Headphones, Settings as _Settings, Shield, HelpCircle } from "lucide-react";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { ChevronDown, Upload, FileText, Headphones, Settings as _Settings, Shield, HelpCircle, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface FaqItem {
   question: string;
@@ -66,8 +68,10 @@ const GUIDES: GuideItem[] = [
 ];
 
 export default function Help() {
+  const navigate = useNavigate();
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   useScrollAnimations();
+  usePageTitle("Aide");
 
   const toggleFAQ = (index: number): void => {
     setOpenFAQ(openFAQ === index ? null : index);
@@ -77,7 +81,16 @@ export default function Help() {
     <div className="min-h-screen bg-white text-gray-800">
       <Header />
 
-      <main id="main-content" className="bg-white py-16" role="main">
+      <main id="main-content" className="relative bg-white min-h-screen py-16" role="main">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label="Retour à la page précédente"
+          className="absolute top-6 right-6 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded"
+        >
+          <ArrowLeft size={18} aria-hidden="true" /> Retour
+        </button>
+
         <header className="mx-auto max-w-6xl px-6 py-12 text-center">
           <h1 data-animate data-animate-variant="fade-up" className="text-4xl font-bold mb-4" id="page-title">
             Comment utiliser Lab'IA
@@ -96,8 +109,8 @@ export default function Help() {
               const Icon = guide.icon;
               return (
                 <article key={index} data-animate-child
-                  className="flex flex-col border border-gray-100 rounded-2xl p-8 text-center items-center shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-400 transition-all cursor-pointer hover:shadow-md"
-                  tabIndex={0} role="listitem" aria-label={guide.title}
+                  className="flex flex-col border border-gray-100 rounded-2xl p-8 text-center items-center shadow-sm hover:shadow-md transition-all"
+                  role="listitem"
                 >
                   <Icon
                     size={48}
@@ -183,7 +196,7 @@ export default function Help() {
               { bg: "bg-purple-50", border: "border-purple-500", emoji: "📋", title: "Consultez votre médecin",  text: "Lab'IA complète, ne remplace pas une consultation médicale professionnelle." },
               { bg: "bg-orange-50", border: "border-orange-500", emoji: "🔒", title: "Protégez vos données",    text: "Ne partagez pas vos résultats avec des tiers. Lab'IA les protège automatiquement." },
             ].map(({ bg, border, emoji, title, text }) => (
-              <article key={title} data-animate-child className={`${bg} border-l-4 ${border} p-6 rounded`} role="listitem" tabIndex={0}>
+              <article key={title} data-animate-child className={`${bg} border-l-4 ${border} p-6 rounded`} role="listitem">
                 <h3 className="font-bold mb-2 flex items-center gap-2">
                   <span aria-hidden="true">{emoji}</span> {title}
                 </h3>
@@ -201,6 +214,7 @@ export default function Help() {
             {FAQ_ITEMS.map((item, index) => (
               <div key={index} data-animate-child className="border rounded-lg overflow-hidden">
                 <button
+                  type="button"
                   onClick={() => toggleFAQ(index)}
                   className="w-full flex items-center justify-between p-6 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-400 transition-all"
                   aria-expanded={openFAQ === index}
@@ -238,10 +252,10 @@ export default function Help() {
               >
                 Envoyer un email
               </a>
-              <a href="#"
+              <a href="mailto:support@labia.com"
                 className="bg-white text-raspberry-700 border-2 border-raspberry-300 px-8 py-3 rounded-full font-semibold hover:bg-raspberry-50 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-400"
               >
-                Contacter le support
+                Envoyer un email au support
               </a>
             </div>
           </div>

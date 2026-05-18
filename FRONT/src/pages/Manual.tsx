@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import UiButton from "../components/UiButton";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const COMMON_TESTS: string[] = [
   "Hémoglobine", "Glucose", "Plaquettes", "Créatinine", "CRP",
@@ -16,6 +17,7 @@ const COMMON_TESTS: string[] = [
 export default function Manual() {
   const navigate = useNavigate();
   useScrollAnimations();
+  usePageTitle("Saisie manuelle");
 
   const [testName, setTestName] = useState("");
   const [tests,    setTests]    = useState<string[]>([]);
@@ -41,26 +43,24 @@ export default function Manual() {
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100 flex flex-col">
       <Header />
 
-      <main id="main-content" role="main" aria-labelledby="page-title" className="flex-1 flex items-center justify-center px-4 pt-24">
+      <main id="main-content" role="main" aria-labelledby="page-title" className="relative min-h-screen flex items-center justify-center px-4 py-24">
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="absolute top-24 right-6 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded"
+        >
+          <X size={18} aria-hidden="true" /> Fermer
+        </button>
+
         <div className="max-w-160 w-full flex flex-col gap-6">
 
-          <div data-animate data-animate-variant="fade-up" className="flex items-start justify-between">
-            <div>
-              <h1 id="page-title" className="text-base font-semibold text-gray-900">
-                Construisez votre liste de tests
-              </h1>
-              <p className="text-base font-normal text-gray-500">
-                Ajoutez les tests que vous souhaitez analyser
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              aria-label="Fermer et revenir à l'accueil"
-              className="focus:outline-none focus:ring-2 focus:ring-raspberry-400 rounded"
-            >
-              <X className="text-gray-600" aria-hidden="true" />
-            </button>
+          <div data-animate data-animate-variant="fade-up">
+            <h1 id="page-title" className="text-base font-semibold text-gray-900">
+              Construisez votre liste de tests
+            </h1>
+            <p className="text-base font-normal text-gray-500">
+              Ajoutez les tests que vous souhaitez analyser
+            </p>
           </div>
 
           <section data-animate data-animate-variant="fade-up" data-animate-delay="0.1"
@@ -71,27 +71,33 @@ export default function Manual() {
               Informations du patient
             </h2>
 
-            <div role="radiogroup" aria-labelledby="label-sexe" className="flex flex-col gap-2">
-              <span id="label-sexe" className="text-sm text-gray-700">Sexe</span>
+            <fieldset className="flex flex-col gap-2">
+              <legend className="text-sm text-gray-700">Sexe</legend>
               <div className="flex gap-3">
                 {(["homme", "femme"] as const).map((value) => (
-                  <button
+                  <label
                     key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={sex === value}
-                    onClick={() => setSex(value)}
-                    className={`px-4 py-2 rounded-full border-2 text-sm transition focus:outline-none focus:ring-2 focus:ring-raspberry-400
+                    htmlFor={`sex-${value}`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 text-sm cursor-pointer transition select-none
                       ${sex === value
                         ? "bg-raspberry-600 text-white border-raspberry-600"
                         : "border-gray-200 text-gray-600 hover:border-raspberry-300"
                       }`}
                   >
+                    <input
+                      id={`sex-${value}`}
+                      type="radio"
+                      name="sex"
+                      value={value}
+                      checked={sex === value}
+                      onChange={() => setSex(value)}
+                      className="sr-only"
+                    />
                     {value === "homme" ? "Homme" : "Femme"}
-                  </button>
+                  </label>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             <div className="flex flex-col gap-2">
               <label htmlFor="age" className="text-sm text-gray-700">Âge</label>
@@ -180,7 +186,6 @@ export default function Manual() {
           {tests.length > 0 && sex && age && (
             <UiButton
               bg="raspberry" text="white"
-              aria-label="Continuer pour entrer les valeurs des tests"
               onClick={() => navigate("/manual/values", { state: { tests, sex, age: Number(age) } })}
               className="w-full py-3 text-base"
             >

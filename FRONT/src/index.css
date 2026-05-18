@@ -44,3 +44,19 @@ body {
 [data-animate-child] {
   opacity: 0;
 }
+
+/* Respect prefers-reduced-motion : contenu immédiatement visible, sans animation */
+@media (prefers-reduced-motion: reduce) {
+  [data-animate],
+  [data-animate-child] {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  .animate-\[fadeIn\],
+  .animate-\[slideUp\] {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
