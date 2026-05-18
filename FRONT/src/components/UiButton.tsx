@@ -1,14 +1,31 @@
-const bgColors = {
-  raspberry: "bg-raspberry-600 hover:bg-raspberry-500",
+import type { ReactNode } from "react";
+
+type BgVariant = "raspberry" | "raspberryLight" | "white";
+type TextVariant = "white" | "black" | "raspberry";
+type ButtonType = "button" | "submit" | "reset";
+
+const bgColors: Record<BgVariant, string> = {
+  raspberry:      "bg-raspberry-600 hover:bg-raspberry-500",
   raspberryLight: "bg-raspberry-100 hover:bg-raspberry-200",
-  white: "bg-white hover:bg-raspberry-50 border border-raspberry-300",
+  white:          "bg-white hover:bg-raspberry-50 border border-raspberry-300",
 };
 
-const textColors = {
-  white: "text-white",
-  black: "text-black",
+const textColors: Record<TextVariant, string> = {
+  white:     "text-white",
+  black:     "text-black",
   raspberry: "text-raspberry-700",
 };
+
+interface UiButtonProps {
+  children: ReactNode;
+  onClick?: () => void;
+  bg?: BgVariant;
+  text?: TextVariant;
+  disabled?: boolean;
+  ariaLabel?: string;
+  className?: string;
+  type?: ButtonType;
+}
 
 export default function UiButton({
   children,
@@ -19,10 +36,10 @@ export default function UiButton({
   ariaLabel,
   className = "",
   type = "button",
-}) {
+}: UiButtonProps) {
   const hasText =
     typeof children === "string" ||
-    (Array.isArray(children) && children.some(c => typeof c === "string"));
+    (Array.isArray(children) && children.some((c) => typeof c === "string"));
 
   return (
     <button

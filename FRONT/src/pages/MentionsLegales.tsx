@@ -1,9 +1,15 @@
+import type { ReactNode } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
 
-const Section = ({ title, children }) => (
+interface SectionProps {
+  title: string;
+  children: ReactNode;
+}
+
+const Section = ({ title, children }: SectionProps) => (
   <section data-animate data-animate-variant="fade-up" className="mb-10">
     <h2 className="text-lg font-bold text-gray-900 mb-3 border-b border-gray-100 pb-2">{title}</h2>
     <div className="text-sm text-gray-600 leading-relaxed space-y-3">{children}</div>
@@ -36,7 +42,7 @@ export default function MentionsLegales() {
             L'utilisation du service Lab'IA implique l'acceptation pleine et entière des présentes conditions d'utilisation. Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser le service.
           </p>
           <p>
-            La Société se réserve le droit de modifier les présentes conditions à tout moment. Les modifications entrent en vigueur dès leur publication sur le site. Il vous appartient de consulter régulièrement cette page.
+            La Société se réserve le droit de modifier les présentes conditions à tout moment. Les modifications entrent en vigueur dès leur publication sur le site.
           </p>
         </Section>
 
@@ -55,7 +61,7 @@ export default function MentionsLegales() {
             Les résultats fournis par Lab'IA sont à titre indicatif et ne constituent pas un avis médical professionnel.
           </p>
           <p>
-            Lab'IA ne remplace en aucun cas une consultation médicale, un diagnostic ou une prescription établis par un professionnel de santé qualifié. En cas de doute sur vos résultats, consultez impérativement votre médecin ou un spécialiste.
+            Lab'IA ne remplace en aucun cas une consultation médicale, un diagnostic ou une prescription établis par un professionnel de santé qualifié.
           </p>
           <p>
             La Société décline toute responsabilité en cas de préjudice résultant d'une interprétation incorrecte des informations fournies par le service.
@@ -64,30 +70,31 @@ export default function MentionsLegales() {
 
         <Section title="5. Propriété intellectuelle">
           <p>
-            L'ensemble des éléments constituant le service Lab'IA (interface, algorithmes, textes, visuels) est protégé par le droit de la propriété intellectuelle et appartient à la Société ou à ses partenaires.
+            L'ensemble des éléments constituant le service Lab'IA est protégé par le droit de la propriété intellectuelle et appartient à la Société ou à ses partenaires.
           </p>
           <p>
-            Toute reproduction, représentation ou exploitation non autorisée de ces éléments est strictement interdite et susceptible de constituer une contrefaçon.
+            Toute reproduction, représentation ou exploitation non autorisée est strictement interdite.
           </p>
         </Section>
 
         <Section title="6. Limitation de responsabilité">
           <p>
-            Le service est fourni « en l'état », sans garantie d'exactitude, d'exhaustivité ou d'adéquation à un usage particulier. La Société ne pourra être tenue responsable de dommages directs ou indirects découlant de l'utilisation du service.
+            Le service est fourni « en l'état », sans garantie d'exactitude ou d'adéquation à un usage particulier. La Société ne pourra être tenue responsable de dommages directs ou indirects découlant de l'utilisation du service.
           </p>
         </Section>
 
         <Section title="7. Droit applicable">
           <p>
-            Les présentes conditions sont régies par le droit français. En cas de litige, et après tentative de résolution amiable, les tribunaux compétents de Paris seront seuls compétents.
+            Les présentes conditions sont régies par le droit français. En cas de litige, les tribunaux compétents de Paris seront seuls compétents.
           </p>
         </Section>
 
         <Section title="8. Contact">
-          <p>Pour toute question relative aux présentes conditions, vous pouvez nous contacter à : <a href="mailto:legal@labia.com" className="text-raspberry-600 hover:underline">legal@labia.com</a></p>
+          <p>
+            Pour toute question relative aux présentes conditions : <a href="mailto:legal@labia.com" className="text-raspberry-600 hover:underline">legal@labia.com</a>
+          </p>
         </Section>
       </main>
-
       <Footer />
     </div>
   );

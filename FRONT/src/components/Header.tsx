@@ -2,10 +2,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import UiButton from "./UiButton";
 
 export default function Header() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const isResultsPage = location.pathname === "/results";
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const isResults = location.pathname === "/results";
 
   return (
     <>
@@ -31,30 +30,18 @@ export default function Header() {
             alt="Logo Lab'IA"
             className="h-10 w-auto"
           />
-          <div
-            className="flex flex-col text-left"
-            aria-labelledby="site-title site-description"
-          >
-            <span
-              id="site-title"
-              className="text-base font-bold text-raspberry-900 leading-tight"
-            >
+          <div className="flex flex-col text-left" aria-labelledby="site-title site-description">
+            <span id="site-title" className="text-base font-bold text-raspberry-900 leading-tight">
               Lab'IA
             </span>
-            <span
-              id="site-description"
-              className="text-xs text-gray-400 font-normal"
-            >
+            <span id="site-description" className="text-xs text-gray-400 font-normal">
               Analyse de résultats médicaux
             </span>
           </div>
         </button>
 
-        <nav
-          className="flex items-center gap-3"
-          aria-label="Actions principales de l'en-tête"
-        >
-          {isResultsPage && (
+        <nav className="flex items-center gap-3" aria-label="Actions principales de l'en-tête">
+          {isResults && (
             <UiButton
               bg="raspberry"
               text="white"
