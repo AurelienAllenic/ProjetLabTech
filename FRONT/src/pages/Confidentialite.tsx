@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 interface SectionProps {
   title: string;
@@ -18,6 +19,7 @@ const Section = ({ title, children }: SectionProps) => (
 
 export default function Confidentialite() {
   useScrollAnimations();
+  usePageTitle("Politique de confidentialite");
   return (
     <div className="min-h-screen bg-white text-gray-800">
       <Header />

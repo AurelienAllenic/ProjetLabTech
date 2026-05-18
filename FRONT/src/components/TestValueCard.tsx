@@ -92,27 +92,37 @@ export default function TestValueCard({ name, onChange }: TestValueCardProps) {
           Plage de référence (optionnel)
         </legend>
         <div className="flex items-center gap-2">
-          <input
-            id={`${safeId}-min`}
-            type="number"
-            inputMode="decimal"
-            step="any"
-            placeholder="Minimum"
-            value={min}
-            onChange={(e) => { setMin(e.target.value); notifyParent({ min: e.target.value }); }}
-            className={`w-full ${INPUT_CLASS}`}
-          />
-          <span className="text-sm text-gray-400">à</span>
-          <input
-            id={`${safeId}-max`}
-            type="number"
-            inputMode="decimal"
-            step="any"
-            placeholder="Maximum"
-            value={max}
-            onChange={(e) => { setMax(e.target.value); notifyParent({ max: e.target.value }); }}
-            className={`w-full ${INPUT_CLASS}`}
-          />
+          <div className="flex flex-col gap-1 w-full">
+            <label htmlFor={`${safeId}-min`} className="sr-only">
+              Valeur minimale de référence pour {name}
+            </label>
+            <input
+              id={`${safeId}-min`}
+              type="number"
+              inputMode="decimal"
+              step="any"
+              placeholder="Minimum"
+              value={min}
+              onChange={(e) => { setMin(e.target.value); notifyParent({ min: e.target.value }); }}
+              className={`w-full ${INPUT_CLASS}`}
+            />
+          </div>
+          <span className="text-sm text-gray-400" aria-hidden="true">à</span>
+          <div className="flex flex-col gap-1 w-full">
+            <label htmlFor={`${safeId}-max`} className="sr-only">
+              Valeur maximale de référence pour {name}
+            </label>
+            <input
+              id={`${safeId}-max`}
+              type="number"
+              inputMode="decimal"
+              step="any"
+              placeholder="Maximum"
+              value={max}
+              onChange={(e) => { setMax(e.target.value); notifyParent({ max: e.target.value }); }}
+              className={`w-full ${INPUT_CLASS}`}
+            />
+          </div>
         </div>
       </fieldset>
     </fieldset>

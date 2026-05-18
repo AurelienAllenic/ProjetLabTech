@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
-import type { ElementType } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import type { ElementType, RefObject } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
+import { usePageTitle } from "../hooks/usePageTitle";
 import {
   Import, Brain, FilePlusCorner, File,
   Keyboard, Eye, Headphones, Accessibility,
@@ -95,34 +96,52 @@ const ACCESSIBILITY_DETAILS: AccessibilityFeature[] = [
   },
 ];
 
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
 interface AccessibilityModalProps {
   feature: AccessibilityFeature | null;
   onClose: () => void;
+  triggerRef: RefObject<HTMLButtonElement | null>;
 }
 
-function AccessibilityModal({ feature, onClose }: AccessibilityModalProps) {
+function AccessibilityModal({ feature, onClose, triggerRef }: AccessibilityModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
-    if (feature) document.body.style.overflow = "hidden";
+    if (!feature) return;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
     return () => { document.body.style.overflow = ""; };
   }, [feature]);
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent): void => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (e.key === "Escape") { onClose(); triggerRef.current?.focus(); return; }
+    if (e.key !== "Tab") return;
+    const el = dialogRef.current;
+    if (!el) return;
+    const focusable = Array.from(el.querySelectorAll<HTMLElement>(FOCUSABLE));
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }, [onClose, triggerRef]);
 
   if (!feature) return null;
   const Icon = feature.icon;
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
+      onKeyDown={handleKeyDown}
       onClick={onClose}
     >
       <div
@@ -130,8 +149,9 @@ function AccessibilityModal({ feature, onClose }: AccessibilityModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <button
+          ref={closeRef}
           type="button"
-          onClick={onClose}
+          onClick={() => { onClose(); triggerRef.current?.focus(); }}
           aria-label="Fermer la fenêtre"
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded-full p-1 transition"
         >
@@ -147,7 +167,7 @@ function AccessibilityModal({ feature, onClose }: AccessibilityModalProps) {
         <ul className="flex flex-col gap-3">
           {feature.details.points.map((point, i) => (
             <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
-              <span className="mt-0.5 w-5 h-5 rounded-full bg-raspberry-100 text-raspberry-600 flex items-center justify-center shrink-0 text-xs font-bold">✓</span>
+              <span aria-hidden="true" className="mt-0.5 w-5 h-5 rounded-full bg-raspberry-100 text-raspberry-600 flex items-center justify-center shrink-0 text-xs font-bold">✓</span>
               {point}
             </li>
           ))}
@@ -161,7 +181,9 @@ function AccessibilityModal({ feature, onClose }: AccessibilityModalProps) {
 export default function LabIALanding() {
   const navigate = useNavigate();
   const [openModal, setOpenModal] = useState<AccessibilityFeature | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   useScrollAnimations();
+  usePageTitle("Accueil");
 
   return (
     <div className="min-h-screen bg-white text-gray-800 overflow-x-hidden">
@@ -182,7 +204,7 @@ export default function LabIALanding() {
               <span data-animate data-animate-variant="fade-up" data-animate-delay="0.05"
                 className="inline-flex items-center gap-2 text-xs font-semibold text-raspberry-600 bg-raspberry-100 px-3 py-1 rounded-full w-max"
               >
-                ✦ Intelligence artificielle médicale
+                <span aria-hidden="true">✦</span> Intelligence artificielle médicale
               </span>
               <h1 id="hero-title" data-animate data-animate-variant="fade-up" data-animate-delay="0.15"
                 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight"
@@ -281,8 +303,8 @@ export default function LabIALanding() {
                 { icon: FilePlusCorner, step: "03", title: "Recevez vos explications", desc: "Des explications simples en langage courant, avec des visuels et options audio." },
               ].map(({ icon: Icon, step, title, desc }) => (
                 <article key={step} data-animate-child
-                  className="relative bg-white border border-gray-100 rounded-2xl p-7 shadow-sm hover:shadow-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400"
-                  tabIndex={0} role="listitem"
+                  className="relative bg-white border border-gray-100 rounded-2xl p-7 shadow-sm hover:shadow-md transition-all"
+                  role="listitem"
                 >
                   <span className="absolute top-5 right-5 text-xs font-bold text-gray-200">{step}</span>
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 bg-raspberry-100 text-raspberry-600">
@@ -312,7 +334,7 @@ export default function LabIALanding() {
                 const Icon = feature.icon;
                 return (
                   <button key={feature.label} type="button" data-animate-child
-                    onClick={() => setOpenModal(feature)} role="listitem"
+                    onClick={(e) => { triggerRef.current = e.currentTarget; setOpenModal(feature); }} role="listitem"
                     aria-label={`En savoir plus sur : ${feature.label}`}
                     className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition flex flex-col items-center text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 group cursor-pointer"
                   >
@@ -344,7 +366,7 @@ export default function LabIALanding() {
               <span data-animate data-animate-variant="fade-left" data-animate-delay="0.05"
                 className="inline-flex items-center gap-2 text-xs font-semibold text-raspberry-600 bg-raspberry-100 px-3 py-1 rounded-full mb-5"
               >
-                ✦ Sécurité maximale
+                <span aria-hidden="true">✦</span> Sécurité maximale
               </span>
               <h2 data-animate data-animate-variant="fade-left" data-animate-delay="0.1"
                 className="text-3xl font-bold text-gray-900 mb-6 leading-tight"
@@ -375,7 +397,7 @@ export default function LabIALanding() {
             <h2 data-animate data-animate-variant="zoom" className="text-3xl font-bold mb-4 leading-tight">
               Prêt à comprendre<br />votre santé ?
             </h2>
-            <p data-animate data-animate-variant="fade-up" data-animate-delay="0.1" className="mb-8 text-blue-100 text-sm">
+            <p data-animate data-animate-variant="fade-up" data-animate-delay="0.1" className="mb-8 text-white/90 text-sm">
               Rejoignez des milliers d'utilisateurs qui font confiance à Lab'IA.
             </p>
             <div data-animate data-animate-variant="fade-up" data-animate-delay="0.2" className="flex gap-4 justify-center flex-wrap">
@@ -395,7 +417,7 @@ export default function LabIALanding() {
       </main>
 
       <Footer />
-      <AccessibilityModal feature={openModal} onClose={() => setOpenModal(null)} />
+      <AccessibilityModal feature={openModal} onClose={() => setOpenModal(null)} triggerRef={triggerRef} />
     </div>
   );
 }

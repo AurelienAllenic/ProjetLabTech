@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 interface SectionProps {
   title: string;
@@ -44,6 +45,7 @@ const CookieRow = ({ name, type, purpose, duration }: CookieRowProps) => (
 
 export default function Cookies() {
   useScrollAnimations();
+  usePageTitle("Politique des cookies");
   return (
     <div className="min-h-screen bg-white text-gray-800">
       <Header />
@@ -64,13 +66,14 @@ export default function Cookies() {
         <Section title="2. Les cookies utilisés par Lab'IA">
           <p>Lab'IA utilise un nombre limité de cookies, tous décrits ci-dessous :</p>
           <div className="overflow-x-auto mt-4">
-            <table className="w-full text-left">
+            <table className="w-full text-left" aria-label="Liste des cookies utilisés par Lab'IA">
+              <caption className="sr-only">Liste des cookies utilisés par Lab'IA</caption>
               <thead>
                 <tr className="border-b-2 border-gray-200">
-                  <th className="pb-3 text-xs font-semibold text-gray-700 pr-4">Nom</th>
-                  <th className="pb-3 text-xs font-semibold text-gray-700 pr-4">Type</th>
-                  <th className="pb-3 text-xs font-semibold text-gray-700 pr-4">Finalité</th>
-                  <th className="pb-3 text-xs font-semibold text-gray-700">Durée</th>
+                  <th scope="col" className="pb-3 text-xs font-semibold text-gray-700 pr-4">Nom</th>
+                  <th scope="col" className="pb-3 text-xs font-semibold text-gray-700 pr-4">Type</th>
+                  <th scope="col" className="pb-3 text-xs font-semibold text-gray-700 pr-4">Finalité</th>
+                  <th scope="col" className="pb-3 text-xs font-semibold text-gray-700">Durée</th>
                 </tr>
               </thead>
               <tbody>

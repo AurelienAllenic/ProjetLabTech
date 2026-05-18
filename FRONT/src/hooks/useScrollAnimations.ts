@@ -15,8 +15,19 @@ function buildFrom(variant: AnimateVariant): gsap.TweenVars {
   return from;
 }
 
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export function useScrollAnimations(): void {
   useLayoutEffect(() => {
+    if (prefersReducedMotion()) {
+      document
+        .querySelectorAll<HTMLElement>("[data-animate], [data-animate-child]")
+        .forEach((el) => { el.style.opacity = "1"; });
+      return;
+    }
+
     const ctx = gsap.context(() => {
 
       /* ── Éléments individuels ─────────────────────────── */

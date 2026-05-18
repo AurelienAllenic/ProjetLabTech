@@ -1,8 +1,7 @@
-import type { ReactNode } from "react";
+import type { ReactNode, ButtonHTMLAttributes } from "react";
 
 type BgVariant = "raspberry" | "raspberryLight" | "white";
 type TextVariant = "white" | "black" | "raspberry";
-type ButtonType = "button" | "submit" | "reset";
 
 const bgColors: Record<BgVariant, string> = {
   raspberry:      "bg-raspberry-600 hover:bg-raspberry-500",
@@ -16,37 +15,29 @@ const textColors: Record<TextVariant, string> = {
   raspberry: "text-raspberry-700",
 };
 
-interface UiButtonProps {
+interface UiButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
   children: ReactNode;
-  onClick?: () => void;
   bg?: BgVariant;
   text?: TextVariant;
-  disabled?: boolean;
   ariaLabel?: string;
-  className?: string;
-  type?: ButtonType;
+  type?: "button" | "submit" | "reset";
 }
 
 export default function UiButton({
   children,
-  onClick,
   bg = "raspberry",
   text = "white",
   disabled = false,
   ariaLabel,
   className = "",
   type = "button",
+  ...rest
 }: UiButtonProps) {
-  const hasText =
-    typeof children === "string" ||
-    (Array.isArray(children) && children.some((c) => typeof c === "string"));
-
   return (
     <button
       type={type}
-      onClick={onClick}
       disabled={disabled}
-      {...(!hasText && ariaLabel ? { "aria-label": ariaLabel } : {})}
+      aria-label={rest["aria-label"] ?? ariaLabel}
       className={`
         px-5 py-2.5
         rounded-full
@@ -60,6 +51,7 @@ export default function UiButton({
         ${textColors[text]}
         ${className}
       `}
+      {...rest}
     >
       {children}
     </button>

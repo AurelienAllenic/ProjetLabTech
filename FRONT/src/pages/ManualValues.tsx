@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 import UiButton from "../components/UiButton";
 import TestValueCard from "../components/TestValueCard";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
+import { usePageTitle } from "../hooks/usePageTitle";
 import type { TestValueData, ManualNavigationState, AnalysisApiResult } from "../types";
 
 export default function ManualValues() {
@@ -13,6 +14,7 @@ export default function ManualValues() {
   const { state } = useLocation() as { state: ManualNavigationState | null };
   const tests = state?.tests ?? [];
   useScrollAnimations();
+  usePageTitle("Saisir les valeurs");
 
   const [values,  setValues]  = useState<Record<string, TestValueData>>({});
   const [loading, setLoading] = useState(false);
@@ -71,27 +73,26 @@ export default function ManualValues() {
       <Header />
 
       <main id="main-content" role="main" aria-labelledby="page-title" tabIndex={-1}
-        className="flex-1 flex justify-center px-4 pt-28 scroll-mt-28"
+        className="relative min-h-screen flex justify-center px-4 pt-28 pb-16 scroll-mt-28"
       >
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label="Retour à l'étape précédente"
+          className="absolute top-24 right-6 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded"
+        >
+          <ArrowLeft size={18} aria-hidden="true" /> Retour
+        </button>
+
         <div className="max-w-180 w-full flex flex-col gap-6">
 
-          <header data-animate data-animate-variant="fade-up" className="flex items-start gap-4">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              aria-label="Revenir à la liste des tests"
-              className="focus:outline-none focus:ring-2 focus:ring-raspberry-400 rounded"
-            >
-              <ArrowLeft className="text-gray-600" aria-hidden="true" />
-            </button>
-            <div>
-              <h1 id="page-title" className="text-base font-semibold text-gray-900">
-                Entrez vos valeurs de test
-              </h1>
-              <p className="text-base font-normal text-gray-500">
-                Renseignez manuellement les valeurs de votre rapport de laboratoire.
-              </p>
-            </div>
+          <header data-animate data-animate-variant="fade-up">
+            <h1 id="page-title" className="text-base font-semibold text-gray-900">
+              Entrez vos valeurs de test
+            </h1>
+            <p className="text-base font-normal text-gray-500">
+              Renseignez manuellement les valeurs de votre rapport de laboratoire.
+            </p>
           </header>
 
           <section aria-labelledby="test-values-title" className="flex flex-col gap-4">
@@ -107,7 +108,6 @@ export default function ManualValues() {
 
           <UiButton
             bg="raspberry" text="white"
-            aria-label="Lancer l'analyse des résultats"
             onClick={handleManualAnalysis}
             disabled={loading}
             className={`w-full py-3 text-base ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
