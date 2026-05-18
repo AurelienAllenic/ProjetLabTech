@@ -15,7 +15,7 @@ export default function Upload() {
   const [loading, setLoading] = useState(false);
   useScrollAnimations();
 
-  const API_URL = (import.meta as ImportMeta & { env: Record<string, string> }).env.VITE_API_URL ?? "http://localhost:3001";
+  const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 
   const handleClick = (): void => { inputRef.current?.click(); };
 
