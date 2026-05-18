@@ -17,7 +17,7 @@ export default function Header() {
 
       <header
         role="banner"
-        className="fixed top-0 left-0 right-0 w-full flex items-center justify-between px-8 py-3 bg-white shadow-sm border-b border-gray-100 z-50"
+        className="fixed top-0 left-0 right-0 w-full flex items-center justify-between px-4 sm:px-8 py-3 bg-white shadow-sm border-b border-gray-100 z-50"
       >
         <button
           type="button"
