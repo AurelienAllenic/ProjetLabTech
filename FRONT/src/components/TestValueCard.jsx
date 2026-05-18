@@ -21,12 +21,24 @@ export default function TestValueCard({ name, onChange }) {
     });
   };
 
+  const inputClass = `
+    border border-gray-200
+    rounded-xl
+    px-3 py-2
+    text-sm
+    bg-white
+    focus:outline-none
+    focus:ring-2
+    focus:ring-raspberry-400
+    transition
+  `;
+
   return (
     <fieldset
       className="
         bg-white
-        rounded-xl
-        border-2 border-raspberry-200
+        rounded-2xl
+        border border-gray-100
         p-6
         flex flex-col gap-4
         shadow-sm
@@ -35,7 +47,7 @@ export default function TestValueCard({ name, onChange }) {
     >
       <legend
         id={`${safeId}-title`}
-        className="text-sm font-semibold text-raspberry-900"
+        className="text-sm font-semibold text-gray-900"
       >
         {name}
       </legend>
@@ -45,7 +57,7 @@ export default function TestValueCard({ name, onChange }) {
         <div className="flex flex-col gap-1">
           <label
             htmlFor={`${safeId}-value`}
-            className="text-sm font-medium text-raspberry-900"
+            className="text-sm font-medium text-gray-700"
           >
             Votre valeur
           </label>
@@ -61,22 +73,14 @@ export default function TestValueCard({ name, onChange }) {
               setValue(e.target.value);
               notifyParent({ value: e.target.value });
             }}
-            className="
-              border-2 border-raspberry-200
-              rounded-lg
-              px-3 py-2
-              text-sm
-              focus:outline-none
-              focus:ring-2
-              focus:ring-raspberry-500
-            "
+            className={inputClass}
           />
         </div>
 
         <div className="flex flex-col gap-1">
           <label
             htmlFor={`${safeId}-unit`}
-            className="text-sm font-medium text-raspberry-900"
+            className="text-sm font-medium text-gray-700"
           >
             Unité
           </label>
@@ -88,16 +92,7 @@ export default function TestValueCard({ name, onChange }) {
               setUnit(e.target.value);
               notifyParent({ unit: e.target.value });
             }}
-            className="
-              border-2 border-raspberry-200
-              rounded-lg
-              px-3 py-2
-              text-sm
-              bg-white
-              focus:outline-none
-              focus:ring-2
-              focus:ring-raspberry-500
-            "
+            className={inputClass}
           >
             <option value="" disabled>
               Sélectionnez une unité
@@ -115,7 +110,7 @@ export default function TestValueCard({ name, onChange }) {
 
       {/* Plage de référence */}
       <fieldset className="flex flex-col gap-1">
-        <legend className="text-sm font-medium text-raspberry-900">
+        <legend className="text-sm font-medium text-gray-700">
           Plage de référence (optionnel)
         </legend>
 
@@ -131,19 +126,10 @@ export default function TestValueCard({ name, onChange }) {
               setMin(e.target.value);
               notifyParent({ min: e.target.value });
             }}
-            className="
-              w-full
-              border-2 border-raspberry-200
-              rounded-lg
-              px-3 py-2
-              text-sm
-              focus:outline-none
-              focus:ring-2
-              focus:ring-raspberry-500
-            "
+            className={`w-full ${inputClass}`}
           />
 
-          <span className="text-sm text-raspberry-700">à</span>
+          <span className="text-sm text-gray-400">à</span>
 
           <input
             id={`${safeId}-max`}
@@ -156,16 +142,7 @@ export default function TestValueCard({ name, onChange }) {
               setMax(e.target.value);
               notifyParent({ max: e.target.value });
             }}
-            className="
-              w-full
-              border-2 border-raspberry-200
-              rounded-lg
-              px-3 py-2
-              text-sm
-              focus:outline-none
-              focus:ring-2
-              focus:ring-raspberry-500
-            "
+            className={`w-full ${inputClass}`}
           />
         </div>
       </fieldset>

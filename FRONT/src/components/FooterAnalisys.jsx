@@ -5,7 +5,7 @@ export default function FooterAnalysis() {
       className="
         w-full
         bg-white
-        border-t-2 border-raspberry-700
+        border-t border-gray-100
         p-4
         text-center
         mt-12
@@ -26,7 +26,7 @@ export default function FooterAnalysis() {
 
         <p
           id="analysis-warning-text"
-          className="text-sm text-raspberry-700"
+          className="text-sm text-gray-400"
         >
           Cet outil fournit uniquement des informations éducatives.
           Consultez toujours un professionnel de santé qualifié pour tout conseil médical,

@@ -2,15 +2,17 @@ import { useRef, useState } from "react";
 import { X, UploadCloud, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
-import FooterAnalysis from "../components/FooterAnalisys";
+import Footer from "../components/Footer";
 import Card from "../components/Card";
 import UiButton from "../components/UiButton";
+import { useScrollAnimations } from "../hooks/useScrollAnimations";
 
 export default function Upload() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  useScrollAnimations();
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 
@@ -68,7 +70,7 @@ export default function Upload() {
 
 
   return (
-    <div className="min-h-screen bg-raspberry-50 flex flex-col">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100 flex flex-col">
       <Header />
 
       <main
@@ -79,30 +81,31 @@ export default function Upload() {
       >
         <div className="max-w-[560px] w-full flex flex-col gap-6">
 
-          <div className="flex items-center justify-between">
+          <div data-animate data-animate-variant="fade-up" className="flex items-center justify-between">
             <h1
               id="page-title"
-              className="text-base font-normal text-raspberry-900"
+              className="text-base font-semibold text-gray-900"
             >
               Téléversez votre rapport de laboratoire
             </h1>
 
             <button
               type="button"
-              onClick={() => navigate("/analysis")}
+              onClick={() => navigate("/")}
               aria-label="Fermer la page de téléversement"
               className="
                 p-2
                 rounded
                 focus:outline-none
                 focus-visible:ring-2
-                focus-visible:ring-raspberry-500
+                focus-visible:ring-raspberry-400
               "
             >
-              <X className="text-raspberry-900" aria-hidden="true" />
+              <X className="text-gray-600" aria-hidden="true" />
             </button>
           </div>
 
+          <div data-animate data-animate-variant="zoom" data-animate-delay="0.1">
           <Card
             onClick={!file ? handleClick : undefined}
             ariaLabel={
@@ -121,7 +124,7 @@ export default function Upload() {
               ) : (
                 <UploadCloud
                   size={48}
-                  className="text-raspberry-700"
+                  className="text-raspberry-600"
                   aria-hidden="true"
                 />
               )
@@ -137,6 +140,8 @@ export default function Upload() {
                 : "Appuyez sur Entrée ou Espace pour parcourir les fichiers. Formats acceptés : PDF, CSV, TXT, PNG, JPG"
             }
           />
+
+          </div>
 
           <input
             ref={inputRef}
@@ -165,11 +170,11 @@ export default function Upload() {
                 aria-label="Supprimer le fichier sélectionné"
                 className="
                   text-sm
-                  text-raspberry-700
+                  text-raspberry-600
                   underline
                   focus:outline-none
                   focus-visible:ring-2
-                  focus-visible:ring-raspberry-500
+                  focus-visible:ring-raspberry-400
                 "
               >
                 Supprimer le fichier
@@ -194,7 +199,7 @@ export default function Upload() {
         </div>
       </main>
 
-      <FooterAnalysis />
+      <Footer />
     </div>
   );
 }

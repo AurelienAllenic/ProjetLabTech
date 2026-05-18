@@ -23,40 +23,40 @@ export default function Card({
       className={`
         w-120 h-64
         bg-white
-        border-2 border-raspberry-700
-        rounded-xl
-        shadow-md
+        border border-gray-100
+        rounded-2xl
+        shadow-sm
         flex flex-col items-center justify-center
         p-6
         cursor-pointer
         transition
-        hover:shadow-lg
+        hover:shadow-md hover:border-raspberry-200
 
         focus:outline-none
         focus-visible:ring-4
-        focus-visible:ring-raspberry-500
+        focus-visible:ring-raspberry-400
         focus-visible:ring-offset-2
-        focus-visible:ring-offset-raspberry-50
+        focus-visible:ring-offset-blue-50
 
         active:scale-[0.98]
 
         ${className || ""}
       `}
     >
-      <div aria-hidden="true" className="mb-4 text-raspberry-700">
+      <div aria-hidden="true" className="mb-4 text-raspberry-600 bg-raspberry-50 w-14 h-14 rounded-2xl flex items-center justify-center">
         {icon}
       </div>
 
       <h2
         id={titleId}
-        className="text-xl font-semibold text-raspberry-900 mb-2 text-center"
+        className="text-lg font-semibold text-gray-900 mb-2 text-center"
       >
         {title}
       </h2>
 
       <p
         id={descId}
-        className="text-base font-normal text-raspberry-700 text-center max-w-[400px]"
+        className="text-sm font-normal text-gray-500 text-center max-w-[400px]"
       >
         {description}
       </p>

@@ -2,13 +2,16 @@ import React, { useState, useEffect } from "react";
 import UiButton from "../components/UiButton";
 import { Smile, Frown, Meh } from "lucide-react";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
+import { useScrollAnimations } from "../hooks/useScrollAnimations";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
 export default function LabResultsPage() {
   const navigate = useNavigate();
   const [focusedResultId, setFocusedResultId] = useState(null);
+  useScrollAnimations();
 
 
   const [results, setResults] = useState([]);
@@ -258,7 +261,7 @@ const abnormalCount = results.length - normalCount;
 
 
   return (
-    <div className="w-screen min-h-screen bg-raspberry-50">
+    <div className="w-screen min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100">
           <Header />
 
       <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -269,7 +272,7 @@ const abnormalCount = results.length - normalCount;
           <div className="mt-24 flex justify-end">
             <a
               href="/help"
-              className="px-6 py-2 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 transition"
+              className="px-6 py-2 bg-raspberry-600 text-white rounded-full font-semibold hover:bg-raspberry-500 focus:outline-none focus:ring-2 focus:ring-raspberry-400 focus:ring-offset-2 transition"
               aria-label="Aide"
             >
               Help
@@ -277,11 +280,11 @@ const abnormalCount = results.length - normalCount;
           </div>
 
           {/* Results Summary */}
-          <section className="p-6 mb-6" aria-label="Résumé des résultats">
+          <section data-animate data-animate-variant="fade-up" className="p-6 mb-6" aria-label="Résumé des résultats">
   <div className="flex items-start gap-3 mb-4">
     <button
       onClick={() => navigate("/help")}
-      className="w-8 h-8 bg-raspberry-700 rounded flex items-center justify-center text-white text-lg focus:outline-none focus:ring-2 focus:ring-raspberry-700 focus:ring-offset-2 transition"
+      className="w-8 h-8 bg-raspberry-600 rounded-xl flex items-center justify-center text-white text-lg focus:outline-none focus:ring-2 focus:ring-raspberry-400 focus:ring-offset-2 transition"
       aria-label="Accéder à l'aide médicale"
     >
       🏥
@@ -330,7 +333,7 @@ const abnormalCount = results.length - normalCount;
 
 
           {/* Results Cards */}
-          <main id="main-content" className="space-y-4">
+          <main id="main-content" className="space-y-4" data-animate-group>
   {results.length === 0 && (
     <p className="text-gray-600 text-sm">
       Aucun résultat détecté automatiquement dans ce document.
@@ -340,6 +343,7 @@ const abnormalCount = results.length - normalCount;
   {results.map((result) => (
     <article
       key={result.id}
+      data-animate-child
       tabIndex={0}
       data-result-id={result.id}
       onKeyDown={(e) => handleKeyDown(e, result.id)}
@@ -347,7 +351,7 @@ const abnormalCount = results.length - normalCount;
       onBlur={() => setFocusedResultId(null)}
       className={`border-l-4 ${result.color} bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition ${
         focusedResultId === result.id
-          ? "ring-2 ring-purple-500 ring-offset-2"
+          ? "ring-2 ring-raspberry-400 ring-offset-2"
           : ""
       }`}
       role="region"
@@ -392,10 +396,11 @@ const abnormalCount = results.length - normalCount;
 
           {/* Footer Buttons */}
           <nav
+            data-animate data-animate-variant="fade-up"
             className="flex flex-wrap gap-4 mt-8"
             aria-label="Navigation des résultats"
           >
-            <UiButton bg="raspberry" text="white">
+            <UiButton bg="white" text="raspberry">
               <a
                 href="/"
                 className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current rounded px-2 py-1"
@@ -413,15 +418,9 @@ const abnormalCount = results.length - normalCount;
             </UiButton>
           </nav>
 
-          {/* Disclaimer Footer */}
-          <footer className="text-xs text-gray-500 text-center mt-6 border-t pt-4">
-            <p>
-              Cet outil est à but informatif uniquement et ne remplace pas un
-              avis médical professionnel.
-            </p>
-          </footer>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

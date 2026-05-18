@@ -2,11 +2,13 @@ import { useState } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
-import FooterAnalysis from "../components/FooterAnalisys";
+import Footer from "../components/Footer";
 import UiButton from "../components/UiButton";
+import { useScrollAnimations } from "../hooks/useScrollAnimations";
 
 export default function Manual() {
   const navigate = useNavigate();
+  useScrollAnimations();
 
   const [testName, setTestName] = useState("");
   const [tests, setTests] = useState([]);
@@ -43,7 +45,7 @@ export default function Manual() {
   };
 
   return (
-    <div className="min-h-screen bg-raspberry-50 flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex flex-col">
       <Header />
 
       <main
@@ -54,36 +56,37 @@ export default function Manual() {
       >
         <div className="max-w-160 w-full flex flex-col gap-6">
 
-          <div className="flex items-start justify-between">
+          <div data-animate data-animate-variant="fade-up" className="flex items-start justify-between">
             <div>
               <h1
                 id="page-title"
-                className="text-base font-normal text-raspberry-900"
+                className="text-base font-semibold text-gray-900"
               >
                 Construisez votre liste de tests
               </h1>
-              <p className="text-base font-normal text-raspberry-700">
+              <p className="text-base font-normal text-gray-500">
                 Ajoutez les tests que vous souhaitez analyser
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() => navigate("/analysis")}
+              onClick={() => navigate("/")}
               aria-label="Fermer et revenir à l’analyse"
-              className="focus:outline-none focus:ring-2 focus:ring-raspberry-500 rounded"
+              className="focus:outline-none focus:ring-2 focus:ring-raspberry-400 rounded"
             >
-              <X className="text-raspberry-900" aria-hidden="true" />
+              <X className="text-gray-600" aria-hidden="true" />
             </button>
           </div>
 
           <section
-            className="bg-white rounded-xl border-2 border-raspberry-200 p-6 flex flex-col gap-4"
+            data-animate data-animate-variant="fade-up" data-animate-delay="0.1"
+            className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-4 shadow-sm"
             aria-labelledby="patient-info-title"
           >
             <h2
               id="patient-info-title"
-              className="text-sm font-medium text-raspberry-900"
+              className="text-sm font-semibold text-gray-900"
             >
               Informations du patient
             </h2>
@@ -93,7 +96,7 @@ export default function Manual() {
               aria-labelledby="label-sexe"
               className="flex flex-col gap-2"
             >
-              <span id="label-sexe" className="text-sm text-raspberry-900">
+              <span id="label-sexe" className="text-sm text-gray-700">
                 Sexe
               </span>
 
@@ -104,11 +107,11 @@ export default function Manual() {
                     role="radio"
                     aria-checked={sex === value}
                     onClick={() => setSex(value)}
-                    className={`px-4 py-2 rounded-lg border-2 text-sm transition
+                    className={`px-4 py-2 rounded-full border-2 text-sm transition
                     ${
                       sex === value
                         ? "bg-raspberry-600 text-white border-raspberry-600"
-                        : "border-raspberry-200 text-raspberry-700"
+                        : "border-gray-200 text-gray-600 hover:border-raspberry-300"
                     }`}
                   >
                     {value === "homme" ? "Homme" : "Femme"}
@@ -118,7 +121,7 @@ export default function Manual() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label htmlFor="age" className="text-sm text-raspberry-900">
+              <label htmlFor="age" className="text-sm text-gray-700">
                 Âge
               </label>
 
@@ -133,13 +136,13 @@ export default function Manual() {
                 aria-describedby="age-help"
                 placeholder="ex : 28"
                 className="
-                  border-2 border-raspberry-200
-                  rounded-lg
+                  border border-gray-200
+                  rounded-xl
                   px-3 py-2
                   text-sm
                   focus:outline-none
                   focus:ring-2
-                  focus:ring-raspberry-500
+                  focus:ring-raspberry-400
                 "
               />
 
@@ -150,17 +153,18 @@ export default function Manual() {
           </section>
 
           <section
-            className="bg-white rounded-xl border-2 border-raspberry-200 p-6 flex flex-col gap-4"
+            data-animate data-animate-variant="fade-up" data-animate-delay="0.2"
+            className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-4 shadow-sm"
             aria-labelledby="add-test-title"
           >
             <h2
               id="add-test-title"
-              className="text-sm font-medium text-raspberry-900"
+              className="text-sm font-semibold text-gray-900"
             >
               Nom du test
             </h2>
             
-            <span id="add-test-label" className="text-sm text-raspberry-900">
+            <span id="add-test-label" className="text-sm text-gray-500">
               Taper entrée libre pour ajouter ou choisir parmi les tests courants :
             </span>
 
@@ -178,13 +182,13 @@ export default function Manual() {
                   placeholder="ex : Hémoglobine, Glucose"
                   className="
                     flex-1
-                    border-2 border-raspberry-200
-                    rounded-lg
+                    border border-gray-200
+                    rounded-xl
                     px-3 py-2
                     text-sm
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-raspberry-500
+                    focus:ring-raspberry-400
                   "
                 />
               </div>
@@ -194,11 +198,11 @@ export default function Manual() {
   href="#section-suivante"
   className="
     text-sm
-    text-raspberry-700
+    text-raspberry-600
     underline
     focus:outline-none
     focus:ring-2
-    focus:ring-raspberry-500
+    focus:ring-raspberry-400
     rounded
     w-fit
   "
@@ -215,13 +219,15 @@ export default function Manual() {
                     aria-label={`Ajouter le test ${test}`}
                     className="
                       px-3 py-1
-                      rounded-lg
-                      bg-raspberry-100
+                      rounded-full
+                      bg-raspberry-50
                       border border-raspberry-200
+                      text-raspberry-700
                       text-sm
+                      hover:bg-raspberry-100
                       focus:outline-none
                       focus:ring-2
-                      focus:ring-raspberry-500
+                      focus:ring-raspberry-400
                     "
                   >
                     {test}
@@ -234,12 +240,13 @@ export default function Manual() {
 
           <section
             id="section-suivante"
-            className="bg-white rounded-xl border-2 border-raspberry-200 p-6 flex flex-col gap-4"
+            data-animate data-animate-variant="fade-up" data-animate-delay="0.3"
+            className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-4 shadow-sm"
             aria-labelledby="your-tests-title"
           >
             <h2
               id="your-tests-title"
-              className="text-sm font-medium text-raspberry-900"
+              className="text-sm font-semibold text-gray-900"
             >
               Vos tests ({tests.length})
             </h2>
@@ -252,7 +259,7 @@ export default function Manual() {
               {tests.map((test, index) => (
                 <li
                   key={`${test}-${index}`}
-                  className="flex items-center justify-between bg-raspberry-100 border-2 border-raspberry-200 rounded-lg px-3 py-2"
+                  className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-3 py-2"
                 >
                   <span className="text-sm">{test}</span>
 
@@ -260,10 +267,10 @@ export default function Manual() {
                     type="button"
                     onClick={() => removeTest(index)}
                     aria-label={`Supprimer le test ${test}`}
-                    className="focus:outline-none focus:ring-2 focus:ring-raspberry-500 rounded"
+                    className="focus:outline-none focus:ring-2 focus:ring-raspberry-400 rounded"
                   >
                     <Trash2
-                      className="text-raspberry-700"
+                      className="text-gray-400 hover:text-red-500"
                       size={18}
                       aria-hidden="true"
                     />
@@ -296,7 +303,7 @@ export default function Manual() {
         </div>
       </main>
 
-      <FooterAnalysis />
+      <Footer />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { useScrollAnimations } from "../hooks/useScrollAnimations";
 import {
   ChevronDown,
   Upload,
@@ -12,6 +14,7 @@ import {
 
 export default function Help() {
   const [openFAQ, setOpenFAQ] = useState(null);
+  useScrollAnimations();
 
   const toggleFAQ = (index) => {
     setOpenFAQ(openFAQ === index ? null : index);
@@ -75,26 +78,27 @@ export default function Help() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="min-h-screen bg-white text-gray-800">
       <Header />
 
 
       <main id="main-content" className="bg-white py-16" role="main">
         <header className="mx-auto max-w-6xl px-6 py-12 text-center">
-          <h1 className="text-4xl font-bold mb-4" id="page-title">Comment utiliser Lab'IA</h1>
-          <p className="text-lg text-gray-600" id="page-description">
+          <h1 data-animate data-animate-variant="fade-up" className="text-4xl font-bold mb-4" id="page-title">Comment utiliser Lab'IA</h1>
+          <p data-animate data-animate-variant="fade-up" data-animate-delay="0.1" className="text-lg text-gray-600" id="page-description">
             Découvrez comment utiliser Lab'IA pour comprendre vos résultats
             médicaux facilement.
           </p>
         </header>
 
         <section className="mx-auto max-w-6xl px-6 py-12" aria-labelledby="guide-title">
-          <h2 className="text-3xl font-bold mb-10 text-center" id="guide-title">Guide de démarrage</h2>
-          <div className="grid md:grid-cols-3 gap-8" role="list">
+          <h2 data-animate data-animate-variant="fade-up" className="text-3xl font-bold mb-10 text-center" id="guide-title">Guide de démarrage</h2>
+          <div className="grid md:grid-cols-3 gap-8" role="list" data-animate-group>
             {guides.map((guide, index) => (
               <article
                 key={index}
-                className={`flex flex-col border rounded-xl p-8 text-center items-center focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all cursor-pointer hover:shadow-lg`}
+                data-animate-child
+                className={`flex flex-col border border-gray-100 rounded-2xl p-8 text-center items-center shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-400 transition-all cursor-pointer hover:shadow-md`}
                 tabIndex="0"
                 role="listitem"
                 aria-label={guide.title}
@@ -107,8 +111,8 @@ export default function Help() {
                     size={48}
                     className={`rounded-2xl m-4 p-2`}
                     style={{
-                      color: guide.color === "raspberry" ? "#881d4f" : guide.color === "green" ? "#166534" : "#1e40af",
-                      backgroundColor: guide.color === "raspberry" ? "#fbcfe8" : guide.color === "green" ? "#bbf7d0" : "#bfdbfe",
+                      color: "#1D4ED8",
+                      backgroundColor: "#DBEAFE",
                     }}
                     aria-hidden="true"
                   />
@@ -121,11 +125,11 @@ export default function Help() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 py-12 bg-gray-50 rounded-xl" aria-labelledby="features-title">
-          <h2 className="text-3xl font-bold mb-10 text-center" id="features-title">Fonctionnalités principales</h2>
-          <div className="grid md:grid-cols-2 gap-8" role="list">
-            <article className="bg-white p-8 rounded-xl shadow-sm" role="listitem">
+          <h2 data-animate data-animate-variant="fade-up" className="text-3xl font-bold mb-10 text-center" id="features-title">Fonctionnalités principales</h2>
+          <div className="grid md:grid-cols-2 gap-8" role="list" data-animate-group>
+            <article data-animate-child className="bg-white p-8 rounded-xl shadow-sm" role="listitem">
               <div className="flex items-center gap-4 mb-4">
-                <Upload size={32} className="text-raspberry-700" aria-hidden="true" />
+                <Upload size={32} className="text-raspberry-600" aria-hidden="true" />
                 <h3 className="text-xl font-bold">Téléchargement de fichiers</h3>
               </div>
               <ul className="space-y-3 text-gray-600">
@@ -136,7 +140,7 @@ export default function Help() {
               </ul>
             </article>
 
-            <article className="bg-white p-8 rounded-xl shadow-sm" role="listitem">
+            <article data-animate-child className="bg-white p-8 rounded-xl shadow-sm" role="listitem">
               <div className="flex items-center gap-4 mb-4">
                 <FileText size={32} className="text-green-700" aria-hidden="true" />
                 <h3 className="text-xl font-bold">Analyse IA</h3>
@@ -149,7 +153,7 @@ export default function Help() {
               </ul>
             </article>
 
-            <article className="bg-white p-8 rounded-xl shadow-sm" role="listitem">
+            <article data-animate-child className="bg-white p-8 rounded-xl shadow-sm" role="listitem">
               <div className="flex items-center gap-4 mb-4">
                 <Headphones size={32} className="text-blue-700" aria-hidden="true" />
                 <h3 className="text-xl font-bold">Support audio</h3>
@@ -162,7 +166,7 @@ export default function Help() {
               </ul>
             </article>
 
-            <article className="bg-white p-8 rounded-xl shadow-sm" role="listitem">
+            <article data-animate-child className="bg-white p-8 rounded-xl shadow-sm" role="listitem">
               <div className="flex items-center gap-4 mb-4">
                 <Shield size={32} className="text-purple-700" aria-hidden="true" />
                 <h3 className="text-xl font-bold">Sécurité & Confidentialité</h3>
@@ -178,9 +182,10 @@ export default function Help() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 py-12" aria-labelledby="tips-title">
-          <h2 className="text-3xl font-bold mb-10 text-center" id="tips-title">Conseils d'utilisation</h2>
-          <div className="grid md:grid-cols-2 gap-6" role="list">
+          <h2 data-animate data-animate-variant="fade-up" className="text-3xl font-bold mb-10 text-center" id="tips-title">Conseils d'utilisation</h2>
+          <div className="grid md:grid-cols-2 gap-6" role="list" data-animate-group>
             <article
+              data-animate-child
               className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded"
               role="listitem"
               tabIndex="0"
@@ -195,6 +200,7 @@ export default function Help() {
             </article>
 
             <article
+              data-animate-child
               className="bg-green-50 border-l-4 border-green-500 p-6 rounded"
               role="listitem"
               tabIndex="0"
@@ -209,6 +215,7 @@ export default function Help() {
             </article>
 
             <article
+              data-animate-child
               className="bg-purple-50 border-l-4 border-purple-500 p-6 rounded"
               role="listitem"
               tabIndex="0"
@@ -223,6 +230,7 @@ export default function Help() {
             </article>
 
             <article
+              data-animate-child
               className="bg-orange-50 border-l-4 border-orange-500 p-6 rounded"
               role="listitem"
               tabIndex="0"
@@ -239,24 +247,25 @@ export default function Help() {
         </section>
 
         <section className="mx-auto max-w-4xl px-6 py-12" aria-labelledby="faq-title">
-          <h2 className="text-3xl font-bold mb-10 text-center" id="faq-title">
+          <h2 data-animate data-animate-variant="fade-up" className="text-3xl font-bold mb-10 text-center" id="faq-title">
             Questions fréquemment posées
           </h2>
-          <div className="space-y-4" role="region" aria-label="Questions fréquemment posées" aria-live="polite">
+          <div className="space-y-4" role="region" aria-label="Questions fréquemment posées" aria-live="polite" data-animate-group>
             {faqItems.map((item, index) => (
               <div
                 key={index}
+                data-animate-child
                 className="border rounded-lg overflow-hidden"
               >
                 <button
                   onClick={() => toggleFAQ(index)}
-                  className="w-full flex items-center justify-between p-6 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-700 transition-all"
+                  className="w-full flex items-center justify-between p-6 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-400 transition-all"
                   aria-expanded={openFAQ === index}
                   aria-controls={`faq-content-${index}`}
                   id={`faq-button-${index}`}
                 >
                   <h3 className="text-lg font-semibold text-left flex items-center gap-2">
-                    <HelpCircle size={20} className="text-raspberry-700" aria-hidden="true" />
+                    <HelpCircle size={20} className="text-raspberry-600" aria-hidden="true" />
                     {item.question}
                   </h3>
                   <ChevronDown
@@ -283,7 +292,7 @@ export default function Help() {
           </div>
         </section>
 
-        <section className="bg-raspberry-100 mx-auto max-w-6xl px-6 py-12 rounded-xl mt-12" aria-labelledby="contact-title">
+        <section data-animate data-animate-variant="zoom" className="bg-blue-50 mx-auto max-w-6xl px-6 py-12 rounded-2xl mt-12" aria-labelledby="contact-title">
           <div className="text-center">
             <h2 className="text-3xl font-bold mb-4" id="contact-title">Besoin d'aide supplémentaire ?</h2>
             <p className="text-lg text-gray-700 mb-6">
@@ -292,14 +301,14 @@ export default function Help() {
             <div className="flex flex-col md:flex-row gap-4 justify-center">
               <a
                 href="mailto:support@labia.com"
-                className="bg-raspberry-700 text-white px-8 py-3 rounded-lg font-semibold hover:bg-raspberry-800 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-700"
+                className="bg-raspberry-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-raspberry-500 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-400"
                 tabIndex="0"
               >
                 Envoyer un email
               </a>
               <a
                 href="#"
-                className="bg-white text-raspberry-700 border-2 border-raspberry-700 px-8 py-3 rounded-lg font-semibold hover:bg-raspberry-50 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-700"
+                className="bg-white text-raspberry-700 border-2 border-raspberry-300 px-8 py-3 rounded-full font-semibold hover:bg-raspberry-50 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-400"
                 tabIndex="0"
               >
                 Contacter le support
@@ -309,61 +318,7 @@ export default function Help() {
         </section>
       </main>
 
-      <footer className="bg-gray-900 text-gray-300 text-sm py-10 mt-12" role="contentinfo">
-        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-6">
-          <nav aria-label="À propos de Lab'IA">
-            <h4 className="font-semibold mb-2 text-white">Lab'IA</h4>
-            <p>Rendre les résultats médicaux compréhensibles pour tous.</p>
-          </nav>
-          <nav aria-label="Navigation principale">
-            <h4 className="font-semibold mb-2 text-white">Liens</h4>
-            <ul className="space-y-1">
-              <li>
-                <a href="/" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-700 rounded px-2 py-1">
-                  Accueil
-                </a>
-              </li>
-              <li>
-                <a href="/help" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-700 rounded px-2 py-1">
-                  Aide
-                </a>
-              </li>
-              <li>
-                <a href="/analysis" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-700 rounded px-2 py-1">
-                  Analyser
-                </a>
-              </li>
-            </ul>
-          </nav>
-          <nav aria-label="Légal et conformité">
-            <h4 className="font-semibold mb-2 text-white">Légal</h4>
-            <ul className="space-y-1">
-              <li>
-                <a href="#" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-700 rounded px-2 py-1">
-                  Confidentialité
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-700 rounded px-2 py-1">
-                  Conditions
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-700 rounded px-2 py-1">
-                  Accessibilité
-                </a>
-              </li>
-            </ul>
-          </nav>
-          <div>
-            <h4 className="font-semibold mb-2 text-white">Contact</h4>
-            <p>contact@labia.com</p>
-          </div>
-        </div>
-        <p className="text-center mt-8 text-xs">
-          © 2025 Lab'IA. Tous droits réservés.
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 }

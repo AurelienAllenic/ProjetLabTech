@@ -1,14 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { UploadCloud, Edit3 } from "lucide-react";
 import Header from "../components/Header";
-import FooterAnalysis from "../components/FooterAnalisys";
+import Footer from "../components/Footer";
 import Card from "../components/Card";
 
 export default function Analysis() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-raspberry-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex flex-col">
       <Header />
 
       <main
@@ -19,14 +19,14 @@ export default function Analysis() {
       >
         <h1
           id="page-title"
-          className="text-4xl font-semibold text-raspberry-900"
+          className="text-4xl font-bold text-gray-900"
         >
           Comment souhaitez-vous commencer votre analyse&nbsp;?
         </h1>
 
         <p
           id="page-description"
-          className="text-base font-normal text-raspberry-700 max-w-xl"
+          className="text-base font-normal text-gray-500 max-w-xl"
         >
           Vous pouvez soit téléverser un rapport de laboratoire, soit saisir
           vos résultats manuellement.
@@ -55,7 +55,7 @@ export default function Analysis() {
         </div>
       </main>
 
-      <FooterAnalysis />
+      <Footer />
     </div>
   );
 }

@@ -2,14 +2,16 @@ import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
-import FooterAnalysis from "../components/FooterAnalisys";
+import Footer from "../components/Footer";
 import UiButton from "../components/UiButton";
 import TestValueCard from "../components/TestValueCard";
+import { useScrollAnimations } from "../hooks/useScrollAnimations";
 
 export default function ManualValues() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const tests = state?.tests || [];
+  useScrollAnimations();
 
   // 🧠 1️⃣ Stockage centralisé des valeurs
   const [values, setValues] = useState({});
@@ -89,7 +91,7 @@ export default function ManualValues() {
 };
 
   return (
-    <div className="min-h-screen bg-raspberry-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex flex-col">
       <Header />
 
       <main
@@ -102,15 +104,15 @@ export default function ManualValues() {
         <div className="max-w-180 w-full flex flex-col gap-6">
 
           {/* En-tête */}
-          <header className="flex items-start gap-4">
+          <header data-animate data-animate-variant="fade-up" className="flex items-start gap-4">
             <button
               type="button"
               onClick={() => navigate(-1)}
               aria-label="Revenir à la liste des tests"
-              className="focus:outline-none focus:ring-2 focus:ring-raspberry-500 rounded"
+              className="focus:outline-none focus:ring-2 focus:ring-raspberry-400 rounded"
             >
               <ArrowLeft
-                className="text-raspberry-900"
+                className="text-gray-600"
                 aria-hidden="true"
               />
             </button>
@@ -118,12 +120,12 @@ export default function ManualValues() {
             <div>
               <h1
                 id="page-title"
-                className="text-base font-normal text-raspberry-900"
+                className="text-base font-semibold text-gray-900"
               >
                 Entrez vos valeurs de test
               </h1>
 
-              <p className="text-base font-normal text-raspberry-700">
+              <p className="text-base font-normal text-gray-500">
                 Renseignez manuellement les valeurs de votre rapport de laboratoire.
               </p>
             </div>
@@ -142,9 +144,10 @@ export default function ManualValues() {
               className="flex flex-col gap-4"
               aria-live="polite"
               aria-label="Liste des tests à renseigner"
+              data-animate-group
             >
               {tests.map((test) => (
-                <li key={test}>
+                <li key={test} data-animate-child>
                   <TestValueCard
                     name={test}
                     onChange={handleValueChange}
@@ -172,7 +175,7 @@ export default function ManualValues() {
         </div>
       </main>
 
-      <FooterAnalysis />
+      <Footer />
     </div>
   );
 }
