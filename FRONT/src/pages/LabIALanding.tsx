@@ -164,20 +164,20 @@ export default function LabIALanding() {
   useScrollAnimations();
 
   return (
-    <div className="min-h-screen bg-white text-gray-800">
+    <div className="min-h-screen bg-white text-gray-800 overflow-x-hidden">
       <Header />
 
       <main id="main-content" role="main" aria-label="Contenu principal de Lab'IA">
 
         {/* Hero */}
         <section
-          className="relative overflow-hidden bg-linear-to-br from-blue-50 via-white to-blue-100 h-screen flex items-center"
+          className="relative overflow-hidden bg-linear-to-br from-blue-50 via-white to-blue-100 min-h-screen flex items-center"
           aria-labelledby="hero-title"
         >
-          <div className="absolute -top-24 -right-24 w-[480px] h-[480px] bg-blue-200 opacity-30 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 -left-16 w-[320px] h-[320px] bg-blue-100 opacity-40 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -top-24 -right-24 w-[480px] h-[480px] bg-blue-200 opacity-30 rounded-full blur-3xl pointer-events-none hidden md:block" />
+          <div className="absolute bottom-0 -left-16 w-[320px] h-[320px] bg-blue-100 opacity-40 rounded-full blur-2xl pointer-events-none hidden md:block" />
 
-          <div className="relative w-full max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center pt-16">
+          <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-12 items-center pt-24 pb-12 md:pt-16 md:pb-0">
             <div className="flex flex-col gap-6">
               <span data-animate data-animate-variant="fade-up" data-animate-delay="0.05"
                 className="inline-flex items-center gap-2 text-xs font-semibold text-raspberry-600 bg-raspberry-100 px-3 py-1 rounded-full w-max"
@@ -185,7 +185,7 @@ export default function LabIALanding() {
                 ✦ Intelligence artificielle médicale
               </span>
               <h1 id="hero-title" data-animate data-animate-variant="fade-up" data-animate-delay="0.15"
-                className="text-5xl font-bold text-gray-900 leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight"
               >
                 Votre santé,{" "}
                 <span className="text-raspberry-600">comprise</span>{" "}
@@ -249,13 +249,13 @@ export default function LabIALanding() {
               </p>
             </div>
 
-            <div data-animate data-animate-variant="fade-left" data-animate-delay="0.2" className="relative">
+            <div data-animate data-animate-variant="fade-left" data-animate-delay="0.2" className="relative hidden md:block">
               <img
                 src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=928&auto=format&fit=crop"
                 alt="Professionnel de santé souriant"
                 className="rounded-2xl shadow-xl w-full object-cover max-h-[460px]"
               />
-              <div className="absolute bottom-10 -right-6 bg-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 text-sm font-medium text-gray-700">
+              <div className="absolute bottom-10 right-4 bg-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 text-sm font-medium text-gray-700">
                 <span className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-base">✓</span>
                 Analyse en quelques secondes
               </div>
