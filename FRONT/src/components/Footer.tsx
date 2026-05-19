@@ -6,8 +6,9 @@ interface NavItem {
 }
 
 const NAV_LINKS: NavItem[] = [
-  { href: "/",     label: "Accueil" },
-  { href: "/help", label: "Aide" },
+  { href: "/",      label: "Accueil" },
+  { href: "/help",  label: "Aide" },
+  { href: "/login", label: "Connexion labo" },
 ];
 
 const LEGAL_LINKS: NavItem[] = [
