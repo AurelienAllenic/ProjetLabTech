@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -7,7 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
 
-export default function Login(): JSX.Element {
+export default function Login(): ReactElement {
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,12 +35,12 @@ export default function Login(): JSX.Element {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError("");
-    try {
-      await login(email, password);
-      navigate(from === "/login" ? "/dashboard" : from, { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Identifiants incorrects");
+    const ok = await login(email, password);
+    if (!ok) {
+      setError("Identifiants incorrects. Essayez user@demo.lab / demo ou labo@demo.lab / demo.");
+      return;
     }
+    navigate(from === "/login" ? "/dashboard" : from, { replace: true });
   };
 
   return (

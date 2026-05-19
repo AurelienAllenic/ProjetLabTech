@@ -1,11 +1,12 @@
+import type { ReactElement } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 interface RequireAuthProps {
-  children: JSX.Element;
+  children: ReactElement;
 }
 
-export default function RequireAuth({ children }: RequireAuthProps): JSX.Element {
+export default function RequireAuth({ children }: RequireAuthProps): ReactElement {
   const { user } = useAuth();
   const location = useLocation();
 
