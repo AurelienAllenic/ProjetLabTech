@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Import, Brain, FilePlusCorner, File,
   Keyboard, Eye, Headphones, Accessibility,
@@ -180,10 +181,19 @@ function AccessibilityModal({ feature, onClose, triggerRef }: AccessibilityModal
 
 export default function LabIALanding() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [openModal, setOpenModal] = useState<AccessibilityFeature | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   useScrollAnimations();
   usePageTitle("Accueil");
+
+  const goToUpload = useCallback((): void => {
+    if (!user) {
+      navigate("/login", { state: { from: "/upload" } });
+      return;
+    }
+    navigate("/upload");
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-white text-gray-800 overflow-x-hidden">
@@ -234,7 +244,7 @@ export default function LabIALanding() {
                 className="flex gap-4 mt-2 flex-wrap"
                 role="group" aria-label="Choisissez votre mode d'analyse"
               >
-                <button type="button" onClick={() => navigate("/upload")} aria-label="Téléverser un rapport PDF"
+                <button type="button" onClick={goToUpload} aria-label="Téléverser un rapport PDF"
                   className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm hover:shadow-md hover:border-raspberry-300 transition text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 group"
                 >
                   <span className="w-10 h-10 rounded-xl bg-raspberry-100 text-raspberry-600 flex items-center justify-center shrink-0 group-hover:bg-raspberry-200 transition">
@@ -401,7 +411,7 @@ export default function LabIALanding() {
               Rejoignez des milliers d'utilisateurs qui font confiance à Lab'IA.
             </p>
             <div data-animate data-animate-variant="fade-up" data-animate-delay="0.2" className="flex gap-4 justify-center flex-wrap">
-              <button type="button" onClick={() => navigate("/upload")}
+              <button type="button" onClick={goToUpload}
                 className="flex items-center gap-2 bg-white text-raspberry-700 px-6 py-3 rounded-full font-semibold hover:bg-blue-50 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white shadow-md"
               >
                 <UploadCloud size={18} aria-hidden="true" /> Téléverser un PDF

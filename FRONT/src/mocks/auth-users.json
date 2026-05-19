@@ -1,0 +1,14 @@
+[
+  {
+    "email": "user@demo.lab",
+    "password": "demo",
+    "role": "userLabo",
+    "displayName": "Camille Dupont"
+  },
+  {
+    "email": "labo@demo.lab",
+    "password": "demo",
+    "role": "labo",
+    "displayName": "Administrateur Laboratoire"
+  }
+]

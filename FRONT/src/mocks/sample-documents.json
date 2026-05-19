@@ -1,0 +1,17 @@
+[
+  {
+    "id": "doc-guide-prelevement",
+    "title": "Guide prélèvement sanguin",
+    "filename": "guide-prelevement.pdf"
+  },
+  {
+    "id": "doc-consentement",
+    "title": "Formulaire de consentement",
+    "filename": "consentement-analyse.pdf"
+  },
+  {
+    "id": "doc-livret-patient",
+    "title": "Livret patient – biologie",
+    "filename": "livret-patient.pdf"
+  }
+]
