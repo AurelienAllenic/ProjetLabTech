@@ -1,4 +1,4 @@
-import {
+import React, {
   createContext,
   useCallback,
   useContext,
@@ -6,95 +6,93 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import authUsersData from "../mocks/auth-users.json";
-import type { AuthUser, AuthUserRecord } from "../types/auth";
+import type { AuthUser } from "../types/auth";
 import { isLabRole } from "../types/auth";
 
-const SESSION_STORAGE_KEY = "labia_auth_session";
-
-function parseAuthRecords(data: unknown): AuthUserRecord[] {
-  if (!Array.isArray(data)) return [];
-  const out: AuthUserRecord[] = [];
-  for (const item of data) {
-    if (typeof item !== "object" || item === null) continue;
-    const o = item as Record<string, unknown>;
-    const email = o.email;
-    const password = o.password;
-    const displayName = o.displayName;
-    const role = o.role;
-    if (
-      typeof email === "string" &&
-      typeof password === "string" &&
-      typeof displayName === "string" &&
-      typeof role === "string" &&
-      isLabRole(role)
-    ) {
-      out.push({ email, password, displayName, role });
-    }
-  }
-  return out;
-}
-
-const MOCK_USERS: AuthUserRecord[] = parseAuthRecords(authUsersData);
+const SESSION_KEY = "labia_auth_session";
+const TOKEN_KEY = "labia_auth_token";
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 
 function readSession(): AuthUser | null {
-  if (typeof sessionStorage === "undefined") return null;
-  const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+  if (typeof localStorage === "undefined") return null;
+  const raw = localStorage.getItem(SESSION_KEY);
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const email = parsed.email;
-    const displayName = parsed.displayName;
-    const role = parsed.role;
+    const { email, displayName, role } = parsed;
     if (
       typeof email !== "string" ||
       typeof displayName !== "string" ||
       typeof role !== "string" ||
       !isLabRole(role)
-    ) {
+    )
       return null;
-    }
     return { email, displayName, role };
   } catch {
     return null;
   }
 }
 
+interface LoginApiResponse {
+  token?: string;
+  user?: { email: string; displayName: string; role: string };
+  error?: string;
+}
+
 interface AuthContextValue {
   user: AuthUser | null;
-  login: (email: string, password: string) => boolean;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }): JSX.Element {
+export function AuthProvider({ children }: { children: ReactNode }): React.ReactElement {
   const [user, setUser] = useState<AuthUser | null>(() => readSession());
+  const [token, setToken] = useState<string | null>(
+    () => (typeof localStorage !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null),
+  );
 
-  const login = useCallback((email: string, password: string): boolean => {
-    const trimmed = email.trim().toLowerCase();
-    const record = MOCK_USERS.find(
-      (u) => u.email.toLowerCase() === trimmed && u.password === password,
-    );
-    if (!record) return false;
+  const login = useCallback(async (email: string, password: string): Promise<void> => {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = (await res.json()) as LoginApiResponse;
+
+    if (!res.ok) {
+      throw new Error(data.error ?? "Identifiants incorrects");
+    }
+
+    if (!data.token || !data.user || !isLabRole(data.user.role)) {
+      throw new Error("Réponse du serveur invalide");
+    }
+
     const next: AuthUser = {
-      email: record.email,
-      displayName: record.displayName,
-      role: record.role,
+      email: data.user.email,
+      displayName: data.user.displayName,
+      role: data.user.role,
     };
+
     setUser(next);
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(next));
-    return true;
+    setToken(data.token);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+    localStorage.setItem(TOKEN_KEY, data.token);
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
-    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    setToken(null);
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TOKEN_KEY);
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, login, logout }),
-    [user, login, logout],
+    () => ({ user, token, login, logout }),
+    [user, token, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -102,8 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth doit être utilisé dans un AuthProvider");
-  }
+  if (!ctx) throw new Error("useAuth doit être utilisé dans un AuthProvider");
   return ctx;
 }

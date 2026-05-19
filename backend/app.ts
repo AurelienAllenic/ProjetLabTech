@@ -2,6 +2,9 @@ import express, { type Request, type Response, type NextFunction } from "express
 import dotenv from "dotenv";
 import cors from "cors";
 import analyseSammaryRoute from "./routes/analyseSammaryRoute.js";
+import authRoute from "./routes/authRoute.js";
+import usersRoute from "./routes/usersRoute.js";
+import assignmentsRoute from "./routes/assignmentsRoute.js";
 
 dotenv.config();
 
@@ -27,11 +30,14 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "DELETE"],
   })
 );
 
 app.use("/analyse", analyseSammaryRoute);
+app.use("/auth", authRoute);
+app.use("/users", usersRoute);
+app.use("/assignments", assignmentsRoute);
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error("SERVER ERROR:", err);
