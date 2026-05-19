@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractJsonSafe } from "../../controllers/anlyseController.js";
+import { extractJsonSafe } from "../../controllers/analyseController.js";
 
 describe("extractJsonSafe", () => {
   it("returns null for null input", () => {

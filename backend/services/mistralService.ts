@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { env } from "../config/env.js";
 import type { MistralApiResponse } from "../types.js";
 
 const PROMPT_TEMPLATE = `
@@ -43,7 +44,7 @@ export async function generateTextFromPdf(pdfText: string): Promise<string> {
   const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.API_KEY}`,
+      Authorization: `Bearer ${env.MISTRAL_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -63,7 +64,7 @@ export async function generateTextFromPdf(pdfText: string): Promise<string> {
   let content = data.choices?.[0]?.message?.content ?? "";
   content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
 
-  console.log("🧠 IA RAW LENGTH:", content.length);
+  console.log("AI raw response length:", content.length);
 
   return content;
 }

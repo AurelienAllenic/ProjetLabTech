@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cleanLabReport } from "../../servises/pdfToTextService.js";
+import { cleanLabReport } from "../../services/pdfTextService.js";
 
 describe("cleanLabReport", () => {
   it("returns empty string for empty input", () => {

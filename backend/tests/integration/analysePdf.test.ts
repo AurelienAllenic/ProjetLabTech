@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
 
-vi.mock("../../servises/pdfToTextService.js", () => ({
+vi.mock("../../services/pdfTextService.js", () => ({
   extractPdfText: vi.fn(),
   cleanLabReport: vi.fn((text: string) => text),
 }));
 
-vi.mock("../../servises/callMistralService.js", () => ({
+vi.mock("../../services/mistralService.js", () => ({
   generateTextFromPdf: vi.fn(),
 }));
 
-import { extractPdfText } from "../../servises/pdfToTextService.js";
-import { generateTextFromPdf } from "../../servises/callMistralService.js";
-import { analysePdf } from "../../controllers/anlyseController.js";
+import { extractPdfText } from "../../services/pdfTextService.js";
+import { generateTextFromPdf } from "../../services/mistralService.js";
+import { analysePdf } from "../../controllers/analyseController.js";
 
 const mockExtractPdfText = vi.mocked(extractPdfText);
 const mockGenerateTextFromPdf = vi.mocked(generateTextFromPdf);

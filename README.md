@@ -42,6 +42,9 @@ Notre plateforme utilise l'IA de Mistral pour :
 ### Backend
 - **Node.js** - Environnement d'exécution JavaScript
 - **Express.js** - Framework web pour l'API REST
+- **Supabase Auth** - Authentification des utilisateurs
+- **Supabase Postgres** - Base de données hébergée
+- **Drizzle ORM** - Requêtes SQL métier typées
 - **Mistral AI API** - Intelligence artificielle pour l'analyse des résultats
 
 ### DevOps
@@ -81,9 +84,10 @@ ProjetLabTech/
 ## 🚀 Installation
 
 ### Prérequis
-- Node.js (v18+)
+- Node.js (v20+)
 - npm ou yarn
 - Compte Mistral AI (pour la clé API)
+- Projet Supabase (Auth + Postgres)
 
 ### Installation du Backend
 
@@ -99,7 +103,10 @@ npm install
 cp .env.example .env
 
 # Démarrer le serveur de développement
-npm start
+npm run dev
+
+# Créer/mettre à jour les tables users avec Drizzle
+npm run db:push
 ```
 
 ### Installation du Frontend

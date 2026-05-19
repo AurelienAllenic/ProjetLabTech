@@ -1,31 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
 
-const { builderMock } = vi.hoisted(() => {
-  const builderMock = {
-    select: vi.fn().mockReturnThis(),
-    eq:     vi.fn().mockReturnThis(),
-    single: vi.fn(),
-  };
-  return { builderMock };
-});
+const { signInWithPasswordMock, getOrCreateUserMock } = vi.hoisted(() => ({
+  signInWithPasswordMock: vi.fn(),
+  getOrCreateUserMock: vi.fn(),
+}));
 
-vi.mock("../../lib/supabase.js",  () => ({ supabase: { from: vi.fn(() => builderMock) } }));
-vi.mock("bcryptjs",               () => ({ default: { compare: vi.fn() } }));
-vi.mock("jsonwebtoken",           () => ({ default: { sign: vi.fn().mockReturnValue("mock.jwt") } }));
+vi.mock("../../lib/supabase.js", () => ({
+  supabase: {
+    auth: {
+      signInWithPassword: signInWithPasswordMock,
+    },
+  },
+}));
 
-import bcrypt from "bcryptjs";
+vi.mock("../../services/usersService.js", () => ({
+  getOrCreateUser: getOrCreateUserMock,
+}));
+
 import { login, me } from "../../controllers/authController.js";
-
-const mockCompare = vi.mocked(bcrypt.compare);
-
-const MOCK_USER = {
-  id: "uid-1",
-  email: "user@demo.lab",
-  password_hash: "$2a$10$hash",
-  display_name: "Jhon Doe",
-  role: "userLabo",
-};
 
 function makeReqRes(body: Record<string, unknown> = {}, user?: Record<string, unknown>) {
   const req = { body, user } as unknown as Request;
@@ -48,42 +41,83 @@ describe("login", () => {
     expect(vi.mocked(res.status)).toHaveBeenCalledWith(400);
   });
 
-  it("returns 401 when user is not found in DB", async () => {
-    builderMock.single.mockResolvedValue({ data: null, error: { message: "not found" } });
+  it("returns 401 when Supabase Auth rejects credentials", async () => {
+    signInWithPasswordMock.mockResolvedValue({
+      data: { session: null, user: null },
+      error: { message: "invalid" },
+    });
+
     const { req, res } = makeReqRes({ email: "unknown@test.com", password: "demo" });
     await login(req, res);
     expect(vi.mocked(res.status)).toHaveBeenCalledWith(401);
   });
 
-  it("returns 401 when password does not match", async () => {
-    builderMock.single.mockResolvedValue({ data: MOCK_USER, error: null });
-    mockCompare.mockResolvedValue(false as never);
-    const { req, res } = makeReqRes({ email: "user@demo.lab", password: "wrong" });
-    await login(req, res);
-    expect(vi.mocked(res.status)).toHaveBeenCalledWith(401);
-  });
+  it("returns Supabase tokens and app user on success", async () => {
+    signInWithPasswordMock.mockResolvedValue({
+      data: {
+        session: {
+          access_token: "access-token",
+          refresh_token: "refresh-token",
+        },
+        user: {
+          id: "uid-1",
+          email: "user@demo.lab",
+        },
+      },
+      error: null,
+    });
+    getOrCreateUserMock.mockResolvedValue({
+      id: "uid-1",
+      email: "user@demo.lab",
+      role: "client",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
 
-  it("returns token and user on success", async () => {
-    builderMock.single.mockResolvedValue({ data: MOCK_USER, error: null });
-    mockCompare.mockResolvedValue(true as never);
     const { req, res } = makeReqRes({ email: "user@demo.lab", password: "demo" });
     await login(req, res);
+
     expect(vi.mocked(res.json)).toHaveBeenCalledWith(
       expect.objectContaining({
-        token: "mock.jwt",
-        user: expect.objectContaining({ email: MOCK_USER.email, role: MOCK_USER.role }),
+        accessToken: "access-token",
+        refreshToken: "refresh-token",
+        user: expect.objectContaining({
+          id: "uid-1",
+          email: "user@demo.lab",
+          role: "client",
+        }),
       }),
     );
   });
 });
 
 describe("me", () => {
-  it("returns the authenticated user from req.user", () => {
-    const user = { userId: "uid-1", email: "user@demo.lab", role: "userLabo", displayName: "Jhon Doe" };
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 401 when req.user is missing", async () => {
+    const { req, res } = makeReqRes();
+    await me(req, res);
+
+    expect(vi.mocked(res.status)).toHaveBeenCalledWith(401);
+  });
+
+  it("returns the authenticated user", async () => {
+    const user = {
+      id: "uid-1",
+      email: "user@demo.lab",
+      role: "client",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    };
+
     const { req, res } = makeReqRes({}, user);
-    me(req, res);
+    await me(req, res);
+
     expect(vi.mocked(res.json)).toHaveBeenCalledWith({
-      user: { email: user.email, displayName: user.displayName, role: user.role },
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        created_at: "2026-01-01T00:00:00.000Z",
+      },
     });
   });
 });

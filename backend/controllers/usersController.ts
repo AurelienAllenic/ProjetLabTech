@@ -1,59 +1,53 @@
 import type { Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import { supabase } from "../lib/supabase.js";
-import type { DbUser } from "../types.js";
+import {
+  createClientUser,
+  UserAlreadyExistsError,
+} from "../services/usersService.js";
 
-export async function createUser(req: Request, res: Response): Promise<void> {
-  const { email, displayName, password } = req.body as {
+export async function createClient(req: Request, res: Response): Promise<void> {
+  const { email, password } = req.body as {
     email?: string;
-    displayName?: string;
     password?: string;
   };
 
-  if (!email || !displayName || !password) {
-    res.status(400).json({ error: "email, displayName et password requis" });
+  if (!email || !password) {
+    res.status(400).json({ error: "email et password requis" });
     return;
   }
 
-  const password_hash = await bcrypt.hash(password, 10);
+  if (password.length < 6) {
+    res.status(400).json({ error: "Le mot de passe doit contenir au moins 6 caractères" });
+    return;
+  }
 
-  const { data, error } = await supabase
-    .from("users")
-    .insert({
-      email: email.trim().toLowerCase(),
-      password_hash,
-      display_name: displayName.trim(),
-      role: "userLabo",
-      created_by: req.user!.userId,
-    })
-    .select("id, email, display_name, role, created_at")
-    .single<Pick<DbUser, "id" | "email" | "display_name" | "role" | "created_at">>();
+  if (!req.user) {
+    res.status(401).json({ error: "Non authentifié" });
+    return;
+  }
 
-  if (error) {
-    if (error.code === "23505") {
+  try {
+    const user = await createClientUser({
+      email,
+      password,
+      createdBy: req.user.id,
+    });
+
+    res.status(201).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        created_by: user.createdBy,
+        created_at: user.createdAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    if (error instanceof UserAlreadyExistsError) {
       res.status(409).json({ error: "Un compte avec cet e-mail existe déjà" });
-    } else {
-      console.error("createUser error:", error);
-      res.status(500).json({ error: "Erreur lors de la création du compte" });
+      return;
     }
-    return;
+
+    console.error("createClient error:", error);
+    res.status(500).json({ error: "Erreur lors de la création du client" });
   }
-
-  res.status(201).json({ user: data });
-}
-
-export async function listUsers(req: Request, res: Response): Promise<void> {
-  const { data, error } = await supabase
-    .from("users")
-    .select("id, email, display_name, role, created_at")
-    .eq("created_by", req.user!.userId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("listUsers error:", error);
-    res.status(500).json({ error: "Erreur lors de la récupération des comptes" });
-    return;
-  }
-
-  res.json({ users: data });
 }
