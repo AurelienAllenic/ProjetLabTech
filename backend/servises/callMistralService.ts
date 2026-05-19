@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import type { MistralApiResponse } from "../types.js";
 
 const PROMPT_TEMPLATE = `
 Tu dois répondre STRICTEMENT avec un JSON valide et COMPLET.
@@ -13,7 +14,7 @@ RÈGLES ABSOLUES :
 
 CONTRAINTE CRITIQUE :
 - Tu dois retourner AU MAXIMUM 8 éléments dans "elements"
-- Si le document contient plus d’analyses, ignore-les
+- Si le document contient plus d'analyses, ignore-les
 - Ne dépasse jamais cette limite
 
 Format OBLIGATOIRE :
@@ -36,7 +37,7 @@ Analyse le texte suivant :
 """
 `;
 
-export async function generateTextFromPdf(pdfText) {
+export async function generateTextFromPdf(pdfText: string): Promise<string> {
   const prompt = PROMPT_TEMPLATE.replace("{{TEXT_FROM_PDF}}", pdfText);
 
   const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
@@ -53,18 +54,14 @@ export async function generateTextFromPdf(pdfText) {
     }),
   });
 
-  const data = await response.json();
+  const data = (await response.json()) as MistralApiResponse;
 
   if (!response.ok) {
-    throw new Error(data.error?.message || "Erreur API Mistral");
+    throw new Error(data.error?.message ?? "Erreur API Mistral");
   }
 
-  let content = data.choices?.[0]?.message?.content || "";
-
-  content = content
-    .replace(/```json/gi, "")
-    .replace(/```/g, "")
-    .trim();
+  let content = data.choices?.[0]?.message?.content ?? "";
+  content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
 
   console.log("🧠 IA RAW LENGTH:", content.length);
 
