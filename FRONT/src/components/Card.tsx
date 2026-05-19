@@ -19,7 +19,7 @@ export default function Card({
 }: CardProps) {
   const safeId = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const titleId = `card-title-${safeId}`;
-  const descId  = `card-desc-${safeId}`;
+  const descId = `card-desc-${safeId}`;
 
   return (
     <button
@@ -48,15 +48,24 @@ export default function Card({
         ${className ?? ""}
       `}
     >
-      <div aria-hidden="true" className="mb-4 text-raspberry-600 bg-raspberry-50 w-14 h-14 rounded-2xl flex items-center justify-center">
+      <div
+        aria-hidden="true"
+        className="mb-4 text-raspberry-600 bg-raspberry-50 w-14 h-14 rounded-2xl flex items-center justify-center"
+      >
         {icon}
       </div>
 
-      <h2 id={titleId} className="text-lg font-semibold text-gray-900 mb-2 text-center">
+      <h2
+        id={titleId}
+        className="text-lg font-semibold text-gray-900 mb-2 text-center"
+      >
         {title}
       </h2>
 
-      <p id={descId} className="text-sm font-normal text-gray-500 text-center max-w-[400px]">
+      <p
+        id={descId}
+        className="text-sm font-normal text-gray-500 text-center max-w-[400px]"
+      >
         {description}
       </p>
     </button>
