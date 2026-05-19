@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Link } from "react-router-dom";
 import { UploadCloud, PenLine, LogOut } from "lucide-react";
 import Header from "../../components/Header";
@@ -7,7 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useScrollAnimations } from "../../hooks/useScrollAnimations";
 
-export default function UserLaboDashboard(): JSX.Element {
+export default function UserLaboDashboard(): ReactElement | null {
   const { user, logout } = useAuth();
   useScrollAnimations();
   usePageTitle("Mon espace laboratoire");
