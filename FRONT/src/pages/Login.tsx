@@ -32,15 +32,15 @@ export default function Login(): JSX.Element {
     }
   }, [user, navigate]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError("");
-    const ok = login(email, password);
-    if (!ok) {
-      setError("Identifiants incorrects. Essayez user@demo.lab / demo ou labo@demo.lab / demo.");
-      return;
+    try {
+      await login(email, password);
+      navigate(from === "/login" ? "/dashboard" : from, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Identifiants incorrects");
     }
-    navigate(from === "/login" ? "/dashboard" : from, { replace: true });
   };
 
   return (
@@ -58,7 +58,7 @@ export default function Login(): JSX.Element {
             Connexion professionnelle
           </h1>
           <p className="text-sm text-gray-500 mb-6">
-            Accès réservé aux espaces laboratoire (données fictives, démonstration).
+            Accès réservé aux espaces laboratoire.
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -102,27 +102,6 @@ export default function Login(): JSX.Element {
             </UiButton>
           </form>
 
-          <section aria-labelledby="demo-accounts-title" className="mt-8 border-t border-gray-100 pt-6">
-            <h2 id="demo-accounts-title" className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
-              Comptes de démo (JSON mock)
-            </h2>
-            <ul className="text-xs text-gray-600 space-y-2">
-              <li>
-                <strong className="text-gray-800">Utilisateur labo</strong> —{" "}
-                <code className="rounded bg-gray-100 px-1">user@demo.lab</code> /{" "}
-                <code className="rounded bg-gray-100 px-1">demo</code>
-                <span className="block text-gray-400 mt-0.5">Téléversement et analyse de fichiers.</span>
-              </li>
-              <li>
-                <strong className="text-gray-800">Gestionnaire laboratoire</strong> —{" "}
-                <code className="rounded bg-gray-100 px-1">labo@demo.lab</code> /{" "}
-                <code className="rounded bg-gray-100 px-1">demo</code>
-                <span className="block text-gray-400 mt-0.5">
-                  Création de comptes et attribution de documents PDF (mock).
-                </span>
-              </li>
-            </ul>
-          </section>
 
           <p className="mt-6 text-center text-sm text-gray-500">
             <Link to="/" className="text-raspberry-600 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded">
