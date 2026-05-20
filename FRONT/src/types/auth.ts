@@ -31,6 +31,8 @@ export interface DocumentAssignment {
   documentTitle: string;
   assignedToEmail: string;
   assignedAt: string;
+  /** Présent si un fichier a été téléversé par le labo (téléchargement côté utilisateur). */
+  storagePath?: string | null;
 }
 
 export function isLabRole(value: string): value is LabRole {

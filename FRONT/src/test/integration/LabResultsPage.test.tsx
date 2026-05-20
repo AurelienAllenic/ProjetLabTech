@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import type * as ReactRouterDom from "react-router-dom";
 import LabResultsPage from "../../pages/LabResultsPage";
+import { wrapWithRouterAndAuth } from "../authTestUtils";
 
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal<typeof ReactRouterDom>();
@@ -36,12 +36,7 @@ const MOCK_RESULT = {
   },
 };
 
-const renderPage = () =>
-  render(
-    <MemoryRouter>
-      <LabResultsPage />
-    </MemoryRouter>
-  );
+const renderPage = () => render(wrapWithRouterAndAuth(<LabResultsPage />));
 
 describe("Page LabResultsPage — intégration", () => {
   beforeEach(() => localStorage.clear());

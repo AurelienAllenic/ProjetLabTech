@@ -15,6 +15,8 @@ CREATE TABLE document_assignments (
   user_id        UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   document_id    TEXT        NOT NULL,
   document_title TEXT        NOT NULL,
+  -- Chemin dans le bucket Supabase (SUPABASE_ASSIGNMENTS_BUCKET). NULL = document d'exemple sans fichier.
+  storage_path   TEXT,
   assigned_by    UUID        NOT NULL REFERENCES users(id),
   assigned_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -36,3 +38,6 @@ CREATE INDEX ON analyses (user_id);
 ALTER TABLE users                DISABLE ROW LEVEL SECURITY;
 ALTER TABLE document_assignments DISABLE ROW LEVEL SECURITY;
 ALTER TABLE analyses             DISABLE ROW LEVEL SECURITY;
+
+-- Si la base existait avant l’ajout du stockage des PDF attribués :
+-- ALTER TABLE document_assignments ADD COLUMN IF NOT EXISTS storage_path TEXT;

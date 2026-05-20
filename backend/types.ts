@@ -17,6 +17,8 @@ export interface DbDocumentAssignment {
   user_id: string;
   document_id: string;
   document_title: string;
+  /** Chemin objet dans le bucket ; absent ou null pour les PDF d’exemple. */
+  storage_path: string | null;
   assigned_by: string;
   assigned_at: string;
 }
