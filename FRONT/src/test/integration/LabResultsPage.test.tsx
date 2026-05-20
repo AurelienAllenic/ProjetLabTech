@@ -52,8 +52,8 @@ describe("Page LabResultsPage — intégration", () => {
   it("affiche les résultats depuis localStorage", () => {
     localStorage.setItem("analysisResult", JSON.stringify(MOCK_RESULT));
     renderPage();
-    expect(screen.getByText("Hémoglobine")).toBeInTheDocument();
-    expect(screen.getByText("Glucose")).toBeInTheDocument();
+    expect(screen.getAllByText("Hémoglobine").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Glucose").length).toBeGreaterThanOrEqual(1);
   });
 
   it("affiche la bannière des valeurs normales", () => {

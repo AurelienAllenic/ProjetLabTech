@@ -6,8 +6,30 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import UiButton from "../components/UiButton";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
+import ParameterReferenceChart from "../components/ParameterReferenceChart";
+import ResultsDeviationBars from "../components/ResultsDeviationBars";
+import ResultsDistributionPie from "../components/ResultsDistributionPie";
 import { apiElementToMedicalResult } from "../lib/analysisResultUi";
-import type { MedicalResult, AnalysisApiResult } from "../types";
+import { formatLabNumber } from "../lib/labValueParse";
+import type { MedicalResult, AnalysisApiResult, ParsedRangePosition, MedicalResultKind } from "../types";
+
+function labelForParsedPosition(p: ParsedRangePosition): string {
+  switch (p) {
+    case "below":
+      return "Sous l’intervalle de référence (valeurs extraites)";
+    case "above":
+      return "Au-dessus de l’intervalle de référence (valeurs extraites)";
+    case "within":
+      return "Comprise dans l’intervalle de référence (valeurs extraites)";
+    default:
+      return "Mesure ou intervalle non entièrement lisibles en nombre — se fier au texte brut du laboratoire";
+  }
+}
+
+/** Lignes « nom du marqueur — valeur mesurée » pour une catégorie. */
+function analysisEntriesLines(results: MedicalResult[], kind: MedicalResultKind): string[] {
+  return results.filter((r) => r.kind === kind).map((r) => `${r.name} — ${r.value}`);
+}
 
 export default function LabResultsPage(): JSX.Element {
   const [focusedResultId, setFocusedResultId] = useState<number | null>(null);
@@ -19,6 +41,51 @@ export default function LabResultsPage(): JSX.Element {
   const lowCount = results.filter((r) => r.kind === "low").length;
   const highCount = results.filter((r) => r.kind === "high").length;
   const attentionCount = results.filter((r) => r.kind === "attention").length;
+
+  const pieSlices = [
+    {
+      key: "normal",
+      name: "Dans la norme",
+      value: normalCount,
+      fill: "#16a34a",
+      entries: analysisEntriesLines(results, "normal"),
+    },
+    {
+      key: "low",
+      name: "Trop bas",
+      value: lowCount,
+      fill: "#2563eb",
+      entries: analysisEntriesLines(results, "low"),
+    },
+    {
+      key: "high",
+      name: "Trop élevé",
+      value: highCount,
+      fill: "#ea580c",
+      entries: analysisEntriesLines(results, "high"),
+    },
+    {
+      key: "attention",
+      name: "À préciser / hors normes",
+      value: attentionCount,
+      fill: "#ca8a04",
+      entries: analysisEntriesLines(results, "attention"),
+    },
+  ];
+
+  const pieAriaSummary =
+    results.length === 0
+      ? "Aucune donnée à afficher."
+      : [
+          normalCount > 0 ? `Dans la norme : ${analysisEntriesLines(results, "normal").join(", ")}` : null,
+          lowCount > 0 ? `Trop bas : ${analysisEntriesLines(results, "low").join(", ")}` : null,
+          highCount > 0 ? `Trop élevé : ${analysisEntriesLines(results, "high").join(", ")}` : null,
+          attentionCount > 0
+            ? `À préciser ou hors normes : ${analysisEntriesLines(results, "attention").join(", ")}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(". ");
 
   useEffect(() => {
     const stored = localStorage.getItem("analysisResult");
@@ -217,62 +284,126 @@ export default function LabResultsPage(): JSX.Element {
                 <div
                   className="flex items-start gap-2 text-green-800 bg-green-50 p-3 rounded-lg border border-green-100"
                   role="status"
-                  aria-label={`${normalCount} valeur(s) dans la norme`}
+                  aria-label={`Dans la norme : ${analysisEntriesLines(results, "normal").join(", ")}`}
                 >
-                  <span className="mt-0.5" aria-hidden="true">
+                  <span className="mt-0.5 shrink-0" aria-hidden="true">
                     ✓
                   </span>
-                  <span className="text-sm">
-                    <strong>{normalCount}</strong> paramètre{normalCount > 1 ? "s" : ""} dans la norme de référence.
-                  </span>
+                  <div className="text-sm min-w-0">
+                    <p className="font-semibold text-green-900">Dans la norme de référence</p>
+                    <ul className="mt-2 space-y-1 list-disc list-inside text-green-900/95">
+                      {results
+                        .filter((r) => r.kind === "normal")
+                        .map((r) => (
+                          <li key={r.id}>
+                            <strong>{r.name}</strong>
+                            <span className="tabular-nums"> — {r.value}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
                 </div>
               )}
               {lowCount > 0 && (
                 <div
                   className="flex items-start gap-2 text-blue-900 bg-blue-50 p-3 rounded-lg border border-blue-100"
                   role="status"
-                  aria-label={`${lowCount} valeur(s) trop basses`}
+                  aria-label={`Trop bas : ${analysisEntriesLines(results, "low").join(", ")}`}
                 >
-                  <span className="mt-0.5" aria-hidden="true">
+                  <span className="mt-0.5 shrink-0" aria-hidden="true">
                     ↓
                   </span>
-                  <span className="text-sm">
-                    <strong>{lowCount}</strong> résultat{lowCount > 1 ? "s" : ""} sous la référence (trop bas). À
-                    interpréter avec un professionnel de santé.
-                  </span>
+                  <div className="text-sm min-w-0">
+                    <p className="font-semibold text-blue-950">
+                      Sous la référence (trop bas) — à interpréter avec un professionnel de santé
+                    </p>
+                    <ul className="mt-2 space-y-1 list-disc list-inside">
+                      {results
+                        .filter((r) => r.kind === "low")
+                        .map((r) => (
+                          <li key={r.id}>
+                            <strong>{r.name}</strong>
+                            <span className="tabular-nums"> — {r.value}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
                 </div>
               )}
               {highCount > 0 && (
                 <div
                   className="flex items-start gap-2 text-orange-900 bg-orange-50 p-3 rounded-lg border border-orange-100"
                   role="status"
-                  aria-label={`${highCount} valeur(s) trop élevées`}
+                  aria-label={`Trop élevé : ${analysisEntriesLines(results, "high").join(", ")}`}
                 >
-                  <span className="mt-0.5" aria-hidden="true">
+                  <span className="mt-0.5 shrink-0" aria-hidden="true">
                     ↑
                   </span>
-                  <span className="text-sm">
-                    <strong>{highCount}</strong> résultat{highCount > 1 ? "s" : ""} au-dessus de la référence (trop
-                    élevé). À faire suivre médicalement si besoin.
-                  </span>
+                  <div className="text-sm min-w-0">
+                    <p className="font-semibold text-orange-950">
+                      Au-dessus de la référence (trop élevé) — à faire suivre médicalement si besoin
+                    </p>
+                    <ul className="mt-2 space-y-1 list-disc list-inside">
+                      {results
+                        .filter((r) => r.kind === "high")
+                        .map((r) => (
+                          <li key={r.id}>
+                            <strong>{r.name}</strong>
+                            <span className="tabular-nums"> — {r.value}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
                 </div>
               )}
               {attentionCount > 0 && (
                 <div
                   className="flex items-start gap-2 text-amber-900 bg-amber-50 p-3 rounded-lg border border-amber-100"
                   role="status"
-                  aria-label={`${attentionCount} valeur(s) à surveiller`}
+                  aria-label={`À préciser : ${analysisEntriesLines(results, "attention").join(", ")}`}
                 >
-                  <span className="mt-0.5" aria-hidden="true">
+                  <span className="mt-0.5 shrink-0" aria-hidden="true">
                     ⚠
                   </span>
-                  <span className="text-sm">
-                    <strong>{attentionCount}</strong> mesure{attentionCount > 1 ? "s" : ""} hors normes ou à préciser —
-                    à surveiller avec votre médecin ou votre biologiste.
-                  </span>
+                  <div className="text-sm min-w-0">
+                    <p className="font-semibold text-amber-950">
+                      Hors normes ou à préciser — à surveiller avec votre médecin ou votre biologiste
+                    </p>
+                    <ul className="mt-2 space-y-1 list-disc list-inside">
+                      {results
+                        .filter((r) => r.kind === "attention")
+                        .map((r) => (
+                          <li key={r.id}>
+                            <strong>{r.name}</strong>
+                            <span className="tabular-nums"> — {r.value}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>
+
+            {results.length > 0 ? (
+              <div className="mt-8 grid gap-8 lg:grid-cols-2 lg:items-start">
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-900">Synthèse visuelle et précision</h2>
+                    <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                      Les graphiques utilisent les <strong>nombres détectés</strong> dans les champs valeur et intervalle.
+                      Si le format du compte-rendu est atypique, la partie textuelle du laboratoire reste la référence.
+                    </p>
+                  </div>
+                  <ResultsDeviationBars results={results} />
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+                  <h2 className="text-base font-semibold text-gray-900 mb-2 text-center lg:text-left">
+                    Répartition par statut
+                  </h2>
+                  <ResultsDistributionPie slices={pieSlices} ariaSummary={pieAriaSummary} />
+                </div>
+              </div>
+            ) : null}
           </section>
 
           <main id="main-content" className="space-y-4" data-animate-group>
@@ -302,7 +433,7 @@ export default function LabResultsPage(): JSX.Element {
                       <h3 className="font-bold text-gray-900 text-lg">{result.name}</h3>
                       <dl className="mt-3 grid gap-3 text-sm">
                         <div>
-                          <dt className="text-gray-500 font-medium">Valeur mesurée</dt>
+                          <dt className="text-gray-500 font-medium">Valeur mesurée (texte laboratoire)</dt>
                           <dd className="result-value-large mt-1 text-2xl font-bold text-gray-900 tracking-tight">
                             {result.value}
                           </dd>
@@ -312,7 +443,7 @@ export default function LabResultsPage(): JSX.Element {
                           <dd className="mt-1 text-gray-800">{result.referenceRange}</dd>
                         </div>
                         <div>
-                          <dt className="text-gray-500 font-medium">Catégorie (API)</dt>
+                          <dt className="text-gray-500 font-medium">Statut interprété</dt>
                           <dd className="mt-1">
                             <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${result.statusColor}`}>
                               {result.categoryLabel}
@@ -320,6 +451,62 @@ export default function LabResultsPage(): JSX.Element {
                           </dd>
                         </div>
                       </dl>
+
+                      {result.parsed ? (
+                        <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50/90 p-4">
+                          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-600 mb-3">
+                            Synthèse numérique (extraction automatique)
+                          </h4>
+                          <dl className="grid gap-3 sm:grid-cols-2 text-sm">
+                            {result.parsed.valueNumeric !== null ? (
+                              <div>
+                                <dt className="text-gray-500 font-medium">Valeur extraite</dt>
+                                <dd className="mt-1 font-semibold text-gray-900 tabular-nums">
+                                  {formatLabNumber(result.parsed.valueNumeric)}
+                                  {result.parsed.unit ? ` ${result.parsed.unit}` : ""}
+                                </dd>
+                              </div>
+                            ) : null}
+                            {result.parsed.refLow !== null && result.parsed.refHigh !== null ? (
+                              <div>
+                                <dt className="text-gray-500 font-medium">Bornes extraites</dt>
+                                <dd className="mt-1 font-semibold text-gray-900 tabular-nums">
+                                  {formatLabNumber(result.parsed.refLow)} — {formatLabNumber(result.parsed.refHigh)}
+                                  {result.parsed.unit ? ` ${result.parsed.unit}` : ""}
+                                </dd>
+                              </div>
+                            ) : null}
+                            <div className="sm:col-span-2">
+                              <dt className="text-gray-500 font-medium">Position par rapport à la référence</dt>
+                              <dd className="mt-1 text-gray-900">{labelForParsedPosition(result.parsed.rangePosition)}</dd>
+                            </div>
+                            {result.parsed.deviationPercent != null ? (
+                              <div className="sm:col-span-2">
+                                <dt className="text-gray-500 font-medium">Écart au centre de la référence</dt>
+                                <dd className="mt-1 font-medium text-gray-900 tabular-nums">
+                                  {result.parsed.deviationPercent > 0 ? "+" : ""}
+                                  {result.parsed.deviationPercent.toFixed(1)} %
+                                  <span className="text-gray-500 font-normal text-xs ml-2">
+                                    (0 % = milieu de l&apos;intervalle ; −100 % / +100 % ≈ bornes basse et haute)
+                                  </span>
+                                </dd>
+                              </div>
+                            ) : null}
+                          </dl>
+                        </div>
+                      ) : null}
+
+                      {result.parsed?.valueNumeric != null &&
+                      result.parsed.refLow != null &&
+                      result.parsed.refHigh != null ? (
+                        <ParameterReferenceChart
+                          name={result.name}
+                          valueNumeric={result.parsed.valueNumeric}
+                          refLow={result.parsed.refLow}
+                          refHigh={result.parsed.refHigh}
+                          unit={result.parsed.unit}
+                        />
+                      ) : null}
                     </div>
                     <span className="shrink-0 flex items-start justify-center sm:pt-1" aria-hidden="true">
                       {result.resultIcon}
