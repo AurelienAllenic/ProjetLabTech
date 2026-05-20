@@ -22,6 +22,18 @@ vi.mock("../../services/usersService.js", () => {
   };
 });
 
+vi.mock("../../lib/supabaseAdmin.js", () => ({
+  getSupabaseAdmin: vi.fn().mockReturnValue({
+    from: vi.fn().mockReturnValue({
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    }),
+  }),
+}));
+
+vi.mock("../../services/mailService.js", () => ({
+  sendPasswordSetupEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { createClient } from "../../controllers/usersController.js";
 import { UserAlreadyExistsError } from "../../services/usersService.js";
 

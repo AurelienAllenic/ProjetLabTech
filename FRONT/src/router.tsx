@@ -11,6 +11,7 @@ import MentionsLegales from "./pages/MentionsLegales";
 import Confidentialite from "./pages/Confidentialite";
 import Cookies from "./pages/Cookies";
 import Login from "./pages/Login";
+import SetPassword from "./pages/SetPassword";
 import RoleDashboard from "./pages/dashboard/RoleDashboard";
 
 export const router = createBrowserRouter([
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "/",                element: <LabIALanding /> },
       { path: "/login",           element: <Login /> },
+      { path: "/set-password",    element: <SetPassword /> },
       {
         path: "/dashboard",
         element: (

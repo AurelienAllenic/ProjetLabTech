@@ -19,6 +19,15 @@ declare global {
   }
 }
 
+export interface DbPasswordResetToken {
+  id: string;
+  user_id: string;
+  token: string;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+}
+
 // ── Mistral / analyse ─────────────────────────────────────────────────────────
 
 export interface ApiElement {

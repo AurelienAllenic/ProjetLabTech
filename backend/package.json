@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "start": "node dist/app.js",
@@ -34,6 +34,7 @@
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
     "postgres": "^3.4.9",
+    "resend": "^6.12.3",
     "unpdf": "^1.4.0"
   },
   "devDependencies": {
