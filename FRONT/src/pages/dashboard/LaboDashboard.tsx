@@ -3,7 +3,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import UiButton from "../../components/UiButton";
 import ImageCropModal from "../../components/ImageCropModal";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useScrollAnimations } from "../../hooks/useScrollAnimations";
 import { apiGet, apiPost, apiPostFormData } from "../../lib/api";

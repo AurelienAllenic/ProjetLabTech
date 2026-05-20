@@ -5,7 +5,7 @@ import UserLaboDashboard from "../../pages/dashboard/UserLaboDashboard";
 
 const mockLogout = vi.fn();
 
-vi.mock("../../contexts/AuthContext", () => ({
+vi.mock("../../contexts/useAuth", () => ({
   useAuth: () => ({
     user: { email: "user@demo.lab", displayName: "Jhon Doe", role: "userLabo" },
     logout: mockLogout,

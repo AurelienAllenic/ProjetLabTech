@@ -5,17 +5,19 @@ import LaboDashboard from "../../pages/dashboard/LaboDashboard";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockApiGet  = vi.fn();
-const mockApiPost = vi.fn();
+const mockApiGet           = vi.fn();
+const mockApiPost          = vi.fn();
+const mockApiPostFormData  = vi.fn();
 
 vi.mock("../../lib/api", () => ({
-  apiGet:     (...args: unknown[]) => mockApiGet(...args),
-  apiPost:    (...args: unknown[]) => mockApiPost(...args),
-  saveToken:  vi.fn(),
-  clearToken: vi.fn(),
+  apiGet:           (...args: unknown[]) => mockApiGet(...args),
+  apiPost:          (...args: unknown[]) => mockApiPost(...args),
+  apiPostFormData:  (...args: unknown[]) => mockApiPostFormData(...args),
+  saveToken:        vi.fn(),
+  clearToken:       vi.fn(),
 }));
 
-vi.mock("../../contexts/AuthContext", () => ({
+vi.mock("../../contexts/useAuth", () => ({
   useAuth: () => ({
     user: { email: "labo@demo.lab", displayName: "Admin Labo", role: "labo" },
     logout: vi.fn(),
@@ -163,8 +165,18 @@ describe("LaboDashboard — intégration", () => {
       return Promise.resolve({});
     });
     mockApiPost.mockResolvedValue({ assignment: MOCK_ASSIGNMENT });
+    mockApiPostFormData.mockResolvedValue({ assignment: MOCK_ASSIGNMENT });
 
     renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Alice Martin")).toBeInTheDocument();
+    });
+
+    const txtFile = new File(["Résultats labo — test"], "rapport.txt", { type: "text/plain" });
+    fireEvent.change(screen.getByLabelText(/fichier à attribuer/i), {
+      target: { files: [txtFile] },
+    });
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /attribuer/i })).not.toBeDisabled();
@@ -175,9 +187,9 @@ describe("LaboDashboard — intégration", () => {
     await waitFor(() => {
       expect(screen.getByText(/attribué à/i)).toBeInTheDocument();
     });
-    expect(mockApiPost).toHaveBeenCalledWith(
-      "/assignments",
-      expect.objectContaining({ assignedToEmail: "alice@test.com" }),
+    expect(mockApiPostFormData).toHaveBeenCalledWith(
+      "/assignments/upload",
+      expect.any(FormData),
     );
   });
 });

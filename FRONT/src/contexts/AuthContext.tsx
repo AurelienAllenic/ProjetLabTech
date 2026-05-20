@@ -1,7 +1,5 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useMemo,
   useState,
   type ReactElement,
@@ -9,6 +7,7 @@ import {
 } from "react";
 import { apiPost, saveToken, clearToken } from "../lib/api";
 import type { AuthUser } from "../types/auth";
+import { AuthContext, type AuthContextValue } from "./labiaAuthContext";
 
 const SESSION_KEY = "labia_auth_session";
 
@@ -31,14 +30,6 @@ interface LoginApiResponse {
   token: string;
   user: AuthUser;
 }
-
-interface AuthContextValue {
-  user: AuthUser | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }): ReactElement {
   const [user, setUser] = useState<AuthUser | null>(() => readSession());
@@ -70,10 +61,4 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactElemen
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth doit être utilisé dans un AuthProvider");
-  return ctx;
 }

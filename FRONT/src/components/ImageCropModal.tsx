@@ -61,8 +61,8 @@ function createMaskCenteredInViewport(
   const pctCx = (relX / iw) * 100;
   const pctCy = (relY / ih) * 100;
 
-  let w = Math.max(MASK_MIN_PCT, Math.min(100, DEFAULT_NEW_MASK_W_PCT));
-  let h = Math.max(MASK_MIN_PCT, Math.min(100, DEFAULT_NEW_MASK_H_PCT));
+  const w = Math.max(MASK_MIN_PCT, Math.min(100, DEFAULT_NEW_MASK_W_PCT));
+  const h = Math.max(MASK_MIN_PCT, Math.min(100, DEFAULT_NEW_MASK_H_PCT));
   let x = pctCx - w / 2;
   let y = pctCy - h / 2;
   x = clamp(x, 0, 100 - w);

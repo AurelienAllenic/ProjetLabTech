@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import UiButton from "./UiButton";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 
 export default function Header() {
   const navigate = useNavigate();

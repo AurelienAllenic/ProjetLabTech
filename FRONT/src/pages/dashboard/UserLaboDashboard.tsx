@@ -4,7 +4,7 @@ import { UploadCloud, PenLine, Download } from "lucide-react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import UiButton from "../../components/UiButton";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useScrollAnimations } from "../../hooks/useScrollAnimations";
 import { apiGet } from "../../lib/api";
