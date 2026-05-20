@@ -26,9 +26,9 @@ export default function Header() {
           aria-label="Retour à l'accueil – Lab'IA"
         >
           <img
-            src="/logo.png"
+            src="/logo5.png"
             alt="Logo Lab'IA"
-            className="h-10 w-auto"
+            className="h-20 w-auto"
           />
           <div className="flex flex-col text-left" aria-labelledby="site-title site-description">
             <span id="site-title" className="text-base font-bold text-raspberry-900 leading-tight">
