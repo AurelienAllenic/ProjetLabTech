@@ -60,6 +60,8 @@ export interface AnalysisResult {
   result: {
     elements: ApiElement[];
     warning?: string;
+    /** Synthèse rédigée par l’IA (PDF / analyse automatique) */
+    conclusion?: string;
   };
 }
 

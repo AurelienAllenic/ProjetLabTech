@@ -15,6 +15,8 @@ const MOCK_RESULT = {
   success: true,
   result: {
     warning: "Analyse automatique — à titre indicatif.",
+    conclusion:
+      "La glucose est au-dessus de l’intervalle habituel que vous avez indiqué ; d’autres causes possibles existent. Seul un professionnel de santé peut interpréter ce bilan dans votre contexte.",
     elements: [
       {
         nom: "Hémoglobine",
@@ -85,5 +87,14 @@ describe("Page LabResultsPage — intégration", () => {
     localStorage.setItem("analysisResult", JSON.stringify(MOCK_RESULT));
     renderPage();
     expect(screen.getByRole("button", { name: /export.*pdf/i })).toBeInTheDocument();
+  });
+
+  it("affiche la conclusion quand elle est présente dans le stockage", () => {
+    localStorage.setItem("analysisResult", JSON.stringify(MOCK_RESULT));
+    renderPage();
+    expect(screen.getByRole("heading", { name: /conclusion de l'analyse/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/la glucose est au-dessus de l’intervalle habituel/i),
+    ).toBeInTheDocument();
   });
 });

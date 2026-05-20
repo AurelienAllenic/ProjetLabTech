@@ -24,6 +24,6 @@ describe("Card", () => {
 
   it("utilise ariaLabel si fourni", () => {
     render(<Card {...defaultProps} ariaLabel="Accès au formulaire" />);
-    expect(screen.getByRole("button", { name: "Accès au formulaire" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Accès au formulaire" })).toBeInTheDocument();
   });
 });

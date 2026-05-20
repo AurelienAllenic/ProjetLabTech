@@ -23,6 +23,8 @@ export interface AnalysisApiResult {
   result?: {
     elements?: ApiElement[];
     warning?: string;
+    /** Synthèse rédigée (IA PDF ou saisie manuelle) */
+    conclusion?: string;
   };
 }
 
