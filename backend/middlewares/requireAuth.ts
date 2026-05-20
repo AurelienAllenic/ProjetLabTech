@@ -1,18 +1,52 @@
 import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import type { JwtPayload } from "../types.js";
+import { supabase } from "../lib/supabase.js";
+import { getOrCreateUser } from "../services/usersService.js";
 
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
-  const header = req.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Non authentifié" });
-    return;
-  }
+const getBearerToken = (authorizationHeader: string | undefined): string | null => {
+  const match = authorizationHeader?.match(/^Bearer\s+(.+)$/i);
+  return match?.[1] ?? null;
+};
+
+export async function requireAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
-    const token = header.slice(7);
-    req.user = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    const token = getBearerToken(req.headers.authorization);
+
+    if (!token) {
+      res.status(401).json({ error: "Non authentifié" });
+      return;
+    }
+
+    const { data, error } = await supabase.auth.getUser(token);
+    const user = data.user;
+
+    if (error || !user?.id || !user.email) {
+      res.status(401).json({ error: "Token invalide ou expiré" });
+      return;
+    }
+
+    const appUser = await getOrCreateUser({
+      id: user.id,
+      email: user.email,
+      displayName:
+        typeof user.user_metadata?.display_name === "string"
+          ? user.user_metadata.display_name
+          : undefined,
+    });
+
+    req.user = {
+      id: appUser.id,
+      email: appUser.email,
+      displayName: appUser.displayName,
+      role: appUser.role,
+      createdAt: appUser.createdAt,
+    };
+
     next();
-  } catch {
-    res.status(401).json({ error: "Token invalide ou expiré" });
+  } catch (error) {
+    next(error);
   }
 }

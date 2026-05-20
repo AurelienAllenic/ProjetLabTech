@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import { randomUUID } from "node:crypto";
-import { supabase } from "../lib/supabase.js";
+import { and, desc, eq } from "drizzle-orm";
+import { db } from "../db/client.js";
+import { documentAssignments, users, type DocumentAssignment } from "../db/schema.js";
+import { getSupabaseAdmin } from "../lib/supabaseAdmin.js";
 
 function assignmentsBucket(): string {
   return process.env.SUPABASE_ASSIGNMENTS_BUCKET ?? "assigned-documents";
@@ -10,6 +13,24 @@ function sanitizePdfFilename(name: string): string {
   const base = name.trim() || "document.pdf";
   const cleaned = base.replace(/[^\w.\-\sàâäéèêëïîôùûüçÀÂÄÉÈÊËÏÎÔÙÛÜÇ]/g, "").slice(0, 200);
   return cleaned.length > 0 ? cleaned : "document.pdf";
+}
+
+function serializeAssignment(row: DocumentAssignment) {
+  return {
+    id: row.id,
+    document_id: row.documentId,
+    document_title: row.documentTitle,
+    storage_path: row.storagePath,
+    assigned_at: row.assignedAt.toISOString(),
+    user_id: row.userId,
+    assigned_by: row.assignedBy,
+  };
+}
+
+async function findTargetUser(email: string) {
+  return db.query.users.findFirst({
+    where: eq(users.email, email.trim().toLowerCase()),
+  });
 }
 
 export async function createAssignment(req: Request, res: Response): Promise<void> {
@@ -24,35 +45,24 @@ export async function createAssignment(req: Request, res: Response): Promise<voi
     return;
   }
 
-  const { data: target, error: userErr } = await supabase
-    .from("users")
-    .select("id")
-    .eq("email", assignedToEmail.trim().toLowerCase())
-    .single<{ id: string }>();
+  const target = await findTargetUser(assignedToEmail);
 
-  if (userErr || !target) {
+  if (!target) {
     res.status(404).json({ error: "Utilisateur destinataire introuvable" });
     return;
   }
 
-  const { data, error } = await supabase
-    .from("document_assignments")
-    .insert({
-      user_id: target.id,
-      document_id: documentId,
-      document_title: documentTitle,
-      assigned_by: req.user!.userId,
+  const [assignment] = await db
+    .insert(documentAssignments)
+    .values({
+      userId: target.id,
+      documentId,
+      documentTitle,
+      assignedBy: req.user!.id,
     })
-    .select()
-    .single();
+    .returning();
 
-  if (error) {
-    console.error("createAssignment error:", error);
-    res.status(500).json({ error: "Erreur lors de l'attribution" });
-    return;
-  }
-
-  res.status(201).json({ assignment: data });
+  res.status(201).json({ assignment: serializeAssignment(assignment) });
 }
 
 /** Attribution avec téléversement PDF (stockage Supabase Storage). */
@@ -83,25 +93,24 @@ export async function createAssignmentFromUpload(req: Request, res: Response): P
     return;
   }
 
-  const { data: target, error: userErr } = await supabase
-    .from("users")
-    .select("id")
-    .eq("email", assignedToEmail)
-    .single<{ id: string }>();
+  const target = await findTargetUser(assignedToEmail);
 
-  if (userErr || !target) {
+  if (!target) {
     res.status(404).json({ error: "Utilisateur destinataire introuvable" });
     return;
   }
 
   const documentId = randomUUID();
   const bucket = assignmentsBucket();
-  const storagePath = `${req.user!.userId}/${documentId}.pdf`;
+  const storagePath = `${req.user!.id}/${documentId}.pdf`;
+  const supabaseAdmin = getSupabaseAdmin();
 
-  const { error: uploadError } = await supabase.storage.from(bucket).upload(storagePath, file.buffer, {
-    contentType: "application/pdf",
-    upsert: false,
-  });
+  const { error: uploadError } = await supabaseAdmin.storage
+    .from(bucket)
+    .upload(storagePath, file.buffer, {
+      contentType: "application/pdf",
+      upsert: false,
+    });
 
   if (uploadError) {
     console.error("createAssignmentFromUpload storage:", uploadError);
@@ -112,68 +121,61 @@ export async function createAssignmentFromUpload(req: Request, res: Response): P
     return;
   }
 
-  const documentTitle = sanitizePdfFilename(file.originalname);
+  try {
+    const [assignment] = await db
+      .insert(documentAssignments)
+      .values({
+        userId: target.id,
+        documentId,
+        documentTitle: sanitizePdfFilename(file.originalname),
+        assignedBy: req.user!.id,
+        storagePath,
+      })
+      .returning();
 
-  const { data, error } = await supabase
-    .from("document_assignments")
-    .insert({
-      user_id: target.id,
-      document_id: documentId,
-      document_title: documentTitle,
-      assigned_by: req.user!.userId,
-      storage_path: storagePath,
-    })
-    .select()
-    .single();
-
-  if (error) {
+    res.status(201).json({ assignment: serializeAssignment(assignment) });
+  } catch (error) {
     console.error("createAssignmentFromUpload insert:", error);
-    await supabase.storage.from(bucket).remove([storagePath]).catch(() => undefined);
+    await supabaseAdmin.storage.from(bucket).remove([storagePath]).catch(() => undefined);
     res.status(500).json({ error: "Erreur lors de l'attribution" });
-    return;
   }
-
-  res.status(201).json({ assignment: data });
 }
 
 export async function listAssignments(req: Request, res: Response): Promise<void> {
-  const { data, error } = await supabase
-    .from("document_assignments")
-    .select(`
-      id,
-      document_id,
-      document_title,
-      storage_path,
-      assigned_at,
-      users!document_assignments_user_id_fkey ( email, display_name )
-    `)
-    .eq("assigned_by", req.user!.userId)
-    .order("assigned_at", { ascending: false });
+  const rows = await db
+    .select({
+      assignment: documentAssignments,
+      assignedUser: {
+        email: users.email,
+        displayName: users.displayName,
+      },
+    })
+    .from(documentAssignments)
+    .leftJoin(users, eq(documentAssignments.userId, users.id))
+    .where(eq(documentAssignments.assignedBy, req.user!.id))
+    .orderBy(desc(documentAssignments.assignedAt));
 
-  if (error) {
-    console.error("listAssignments error:", error);
-    res.status(500).json({ error: "Erreur lors de la récupération des attributions" });
-    return;
-  }
-
-  res.json({ assignments: data });
+  res.json({
+    assignments: rows.map(({ assignment, assignedUser }) => ({
+      ...serializeAssignment(assignment),
+      users: assignedUser?.email
+        ? {
+            email: assignedUser.email,
+            display_name: assignedUser.displayName,
+          }
+        : null,
+    })),
+  });
 }
 
-/** Documents attribués au compte utilisateur labo connecté. */
+/** Documents attribués au client connecté. */
 export async function listMyAssignments(req: Request, res: Response): Promise<void> {
-  const { data, error } = await supabase
-    .from("document_assignments")
-    .select("id, document_id, document_title, storage_path, assigned_at")
-    .eq("user_id", req.user!.userId)
-    .order("assigned_at", { ascending: false });
+  const rows = await db.query.documentAssignments.findMany({
+    where: eq(documentAssignments.userId, req.user!.id),
+    orderBy: (assignments, { desc }) => [desc(assignments.assignedAt)],
+  });
 
-  if (error) {
-    console.error("listMyAssignments error:", error);
-    res.status(500).json({ error: "Erreur lors de la récupération des documents" });
-    return;
-  }
-
-  res.json({ assignments: data });
+  res.json({ assignments: rows.map(serializeAssignment) });
 }
 
 /** URL signée temporaire pour télécharger un PDF stocké par le labo. */
@@ -184,21 +186,19 @@ export async function getAssignmentSignedUrl(req: Request, res: Response): Promi
     return;
   }
 
-  const bucket = assignmentsBucket();
+  const assignment = await db.query.documentAssignments.findFirst({
+    where: and(
+      eq(documentAssignments.id, assignmentId),
+      eq(documentAssignments.userId, req.user!.id)
+    ),
+  });
 
-  const { data: row, error } = await supabase
-    .from("document_assignments")
-    .select("storage_path")
-    .eq("id", assignmentId)
-    .eq("user_id", req.user!.userId)
-    .maybeSingle<{ storage_path: string | null }>();
-
-  if (error || !row) {
+  if (!assignment) {
     res.status(404).json({ error: "Attribution introuvable" });
     return;
   }
 
-  if (!row.storage_path) {
+  if (!assignment.storagePath) {
     res.status(404).json({
       error:
         "Ce document est un exemple sans fichier joint ; utilisez les parcours Téléverser ou saisie manuelle avec vos propres données.",
@@ -206,12 +206,12 @@ export async function getAssignmentSignedUrl(req: Request, res: Response): Promi
     return;
   }
 
-  const { data: signed, error: signErr } = await supabase.storage
-    .from(bucket)
-    .createSignedUrl(row.storage_path, 600);
+  const { data: signed, error } = await getSupabaseAdmin().storage
+    .from(assignmentsBucket())
+    .createSignedUrl(assignment.storagePath, 600);
 
-  if (signErr || !signed?.signedUrl) {
-    console.error("getAssignmentSignedUrl:", signErr);
+  if (error || !signed?.signedUrl) {
+    console.error("getAssignmentSignedUrl:", error);
     res.status(500).json({ error: "Impossible de générer le lien de téléchargement" });
     return;
   }

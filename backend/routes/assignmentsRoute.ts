@@ -19,11 +19,16 @@ const pdfUpload = multer({
 
 router.use(requireAuth);
 
-router.post("/", requireRole("labo"), createAssignment);
-router.get("/", requireRole("labo"), listAssignments);
-router.post("/upload", requireRole("labo"), pdfUpload.single("pdf"), createAssignmentFromUpload);
+router.post("/", requireRole("laboratory"), createAssignment);
+router.get("/", requireRole("laboratory"), listAssignments);
+router.post(
+  "/upload",
+  requireRole("laboratory"),
+  pdfUpload.single("pdf"),
+  createAssignmentFromUpload
+);
 
-router.get("/mine", requireRole("userLabo"), listMyAssignments);
-router.get("/mine/:assignmentId/signed-url", requireRole("userLabo"), getAssignmentSignedUrl);
+router.get("/mine", requireRole("client"), listMyAssignments);
+router.get("/mine/:assignmentId/signed-url", requireRole("client"), getAssignmentSignedUrl);
 
 export default router;
