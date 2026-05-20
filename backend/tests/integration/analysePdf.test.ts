@@ -8,6 +8,7 @@ vi.mock("../../services/pdfTextService.js", () => ({
 
 vi.mock("../../services/mistralService.js", () => ({
   generateTextFromPdf: vi.fn(),
+  generateTextFromImage: vi.fn(),
 }));
 
 import { extractPdfText } from "../../services/pdfTextService.js";
@@ -39,7 +40,7 @@ describe("analysePdf controller", () => {
     const { req, res } = makeReqRes(false);
     await analysePdf(req, res);
     expect(vi.mocked(res.status)).toHaveBeenCalledWith(400);
-    expect(vi.mocked(res.json)).toHaveBeenCalledWith({ error: "PDF manquant" });
+    expect(vi.mocked(res.json)).toHaveBeenCalledWith({ error: "PDF ou image manquant" });
   });
 
   it("returns parsed elements on a valid AI response", async () => {

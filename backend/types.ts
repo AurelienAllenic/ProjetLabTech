@@ -13,6 +13,8 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthenticatedUser;
+      originalImageBuffer?: Buffer;
+      originalImageMimeType?: string;
     }
   }
 }
@@ -32,7 +34,7 @@ export interface AnalysisResult {
   result: {
     elements: ApiElement[];
     warning?: string;
-    /** Synthèse rédigée par l’IA (PDF / analyse automatique) */
+    /** Synthèse rédigée par l'IA (PDF / analyse automatique) */
     conclusion?: string;
   };
 }
