@@ -24,11 +24,21 @@ export default function Manual() {
   const [sex,      setSex]      = useState("");
   const [age,      setAge]      = useState("");
 
+  const normalizedKey = (name: string): string => name.trim().toLowerCase();
+
   const addTest = (name: string): void => {
-    if (!name.trim()) return;
-    setTests((prev) => [...prev, name.trim()]);
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setTests((prev) => {
+      const key = normalizedKey(trimmed);
+      if (prev.some((t) => normalizedKey(t) === key)) return prev;
+      return [...prev, trimmed];
+    });
     setTestName("");
   };
+
+  const isTestAlreadyAdded = (label: string): boolean =>
+    tests.some((t) => normalizedKey(t) === normalizedKey(label));
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
@@ -43,15 +53,13 @@ export default function Manual() {
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100 flex flex-col">
       <Header />
 
-      <main id="main-content" role="main" aria-labelledby="page-title" className="relative min-h-screen flex items-center justify-center px-4 py-24">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="absolute top-24 right-6 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded"
-        >
-          <X size={18} aria-hidden="true" /> Fermer
-        </button>
-
+      <main
+        id="main-content"
+        role="main"
+        aria-labelledby="page-title"
+        tabIndex={-1}
+        className="relative min-h-screen flex items-center justify-center px-4 py-24 scroll-mt-28 outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-50 rounded-sm"
+      >
         <div className="max-w-160 w-full flex flex-col gap-6">
 
           <div data-animate data-animate-variant="fade-up">
@@ -144,17 +152,28 @@ export default function Manual() {
                 Passer à la section suivante
               </a>
               <div className="flex flex-wrap gap-2">
-                {COMMON_TESTS.map((test) => (
-                  <button
-                    key={test}
-                    type="button"
-                    onClick={() => addTest(test)}
-                    aria-label={`Ajouter le test ${test}`}
-                    className="px-3 py-1 rounded-full bg-raspberry-50 border border-raspberry-200 text-raspberry-700 text-sm hover:bg-raspberry-100 focus:outline-none focus:ring-2 focus:ring-raspberry-400"
-                  >
-                    {test}
-                  </button>
-                ))}
+                {COMMON_TESTS.map((test) => {
+                  const already = isTestAlreadyAdded(test);
+                  return (
+                    <button
+                      key={test}
+                      type="button"
+                      disabled={already}
+                      onClick={() => addTest(test)}
+                      aria-label={
+                        already ? `${test} : déjà dans la liste` : `Ajouter le test ${test}`
+                      }
+                      aria-pressed={already}
+                      className={`px-3 py-1 rounded-full border text-sm focus:outline-none focus:ring-2 focus:ring-raspberry-400 ${
+                        already
+                          ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-raspberry-50 border-raspberry-200 text-raspberry-700 hover:bg-raspberry-100"
+                      }`}
+                    >
+                      {test}
+                    </button>
+                  );
+                })}
               </div>
             </form>
           </section>
@@ -193,6 +212,14 @@ export default function Manual() {
             </UiButton>
           )}
         </div>
+
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="absolute top-24 right-6 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded z-10"
+        >
+          <X size={18} aria-hidden="true" /> Fermer
+        </button>
       </main>
       <Footer />
     </div>

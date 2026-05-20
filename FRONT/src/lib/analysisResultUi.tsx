@@ -1,6 +1,17 @@
 import type { ReactNode } from "react";
 import { Smile, TrendingDown, TrendingUp, AlertCircle } from "lucide-react";
-import type { ApiElement, MedicalResult, MedicalResultKind } from "../types";
+import type {
+  ApiElement,
+  MedicalResult,
+  MedicalResultKind,
+  ParsedLabMetrics,
+} from "../types";
+import {
+  deviationFromMidpoint,
+  inferRangePosition,
+  parseMeasuredValue,
+  parseReferenceRange,
+} from "./labValueParse";
 
 interface KindUi {
   color: string;
@@ -84,10 +95,43 @@ export function classifyAnalysisCategory(categorie: string | undefined): {
   };
 }
 
+function buildParsedMetrics(tauxRaw: string | undefined, intervalleRaw: string | undefined): ParsedLabMetrics | undefined {
+  const measured = parseMeasuredValue(tauxRaw ?? "");
+  const ref = parseReferenceRange(intervalleRaw ?? "");
+  const unit = measured.unit ?? ref.unit;
+
+  const valueNumeric = measured.numeric;
+  const refLow = ref.low;
+  const refHigh = ref.high;
+
+  if (
+    valueNumeric === null &&
+    refLow === null &&
+    refHigh === null &&
+    unit === null
+  ) {
+    return undefined;
+  }
+
+  const rangePosition = inferRangePosition(valueNumeric, refLow, refHigh);
+  const deviationPercent = deviationFromMidpoint(valueNumeric, refLow, refHigh);
+
+  return {
+    valueNumeric,
+    refLow,
+    refHigh,
+    unit,
+    rangePosition,
+    deviationPercent,
+  };
+}
+
 export function apiElementToMedicalResult(el: ApiElement, index: number): MedicalResult {
   const { kind, label } = classifyAnalysisCategory(el.categorie);
   const ui = KIND_UI[kind];
   const intervalle = el.intervalle?.trim();
+
+  const parsed = buildParsedMetrics(el.taux, intervalle);
 
   return {
     id: index + 1,
@@ -102,5 +146,6 @@ export function apiElementToMedicalResult(el: ApiElement, index: number): Medica
     bgColor: ui.bgColor,
     statusColor: ui.statusColor,
     explanation: el.explication ?? "Aucune explication fournie par l’analyse automatique.",
+    parsed,
   };
 }

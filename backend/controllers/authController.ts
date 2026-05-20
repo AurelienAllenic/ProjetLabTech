@@ -1,6 +1,11 @@
 import type { Request, Response } from "express";
 import { supabase } from "../lib/supabase.js";
 import { getOrCreateUser } from "../services/usersService.js";
+import type { UserRole } from "../types.js";
+
+function toFrontendRole(role: UserRole): "labo" | "userLabo" {
+  return role === "laboratory" ? "labo" : "userLabo";
+}
 
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body as { email?: string; password?: string };
@@ -23,15 +28,21 @@ export async function login(req: Request, res: Response): Promise<void> {
   const user = await getOrCreateUser({
     id: data.user.id,
     email: data.user.email,
+    displayName:
+      typeof data.user.user_metadata?.display_name === "string"
+        ? data.user.user_metadata.display_name
+        : undefined,
   });
 
   res.json({
+    token: data.session.access_token,
     accessToken: data.session.access_token,
     refreshToken: data.session.refresh_token,
     user: {
       id: user.id,
       email: user.email,
-      role: user.role,
+      displayName: user.displayName,
+      role: toFrontendRole(user.role),
       created_at: user.createdAt.toISOString(),
     },
   });
@@ -47,7 +58,8 @@ export async function me(req: Request, res: Response): Promise<void> {
     user: {
       id: req.user.id,
       email: req.user.email,
-      role: req.user.role,
+      displayName: req.user.displayName,
+      role: toFrontendRole(req.user.role),
       created_at: req.user.createdAt.toISOString(),
     },
   });

@@ -31,11 +31,16 @@ export async function requireAuth(
     const appUser = await getOrCreateUser({
       id: user.id,
       email: user.email,
+      displayName:
+        typeof user.user_metadata?.display_name === "string"
+          ? user.user_metadata.display_name
+          : undefined,
     });
 
     req.user = {
       id: appUser.id,
       email: appUser.email,
+      displayName: appUser.displayName,
       role: appUser.role,
       createdAt: appUser.createdAt,
     };

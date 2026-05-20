@@ -1,6 +1,6 @@
 import { createLaboratoryUser, UserAlreadyExistsError } from "../services/usersService.js";
 
-const [, , email, password] = process.argv;
+const [, , email, password, displayName] = process.argv;
 
 if (!email || !password) {
   console.error("Usage: npm run user:create-lab -- <email> <password>");
@@ -8,7 +8,7 @@ if (!email || !password) {
 }
 
 try {
-  const user = await createLaboratoryUser({ email, password });
+  const user = await createLaboratoryUser({ email, password, displayName });
   console.log(`Laboratory user created: ${user.email} (${user.id})`);
 } catch (error) {
   if (error instanceof UserAlreadyExistsError) {

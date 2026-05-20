@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import type * as ReactRouterDom from "react-router-dom";
 import LabResultsPage from "../../pages/LabResultsPage";
+import { wrapWithRouterAndAuth } from "../authTestUtils";
 
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal<typeof ReactRouterDom>();
@@ -15,6 +15,8 @@ const MOCK_RESULT = {
   success: true,
   result: {
     warning: "Analyse automatique — à titre indicatif.",
+    conclusion:
+      "La glucose est au-dessus de l’intervalle habituel que vous avez indiqué ; d’autres causes possibles existent. Seul un professionnel de santé peut interpréter ce bilan dans votre contexte.",
     elements: [
       {
         nom: "Hémoglobine",
@@ -34,12 +36,7 @@ const MOCK_RESULT = {
   },
 };
 
-const renderPage = () =>
-  render(
-    <MemoryRouter>
-      <LabResultsPage />
-    </MemoryRouter>
-  );
+const renderPage = () => render(wrapWithRouterAndAuth(<LabResultsPage />));
 
 describe("Page LabResultsPage — intégration", () => {
   beforeEach(() => localStorage.clear());
@@ -52,8 +49,8 @@ describe("Page LabResultsPage — intégration", () => {
   it("affiche les résultats depuis localStorage", () => {
     localStorage.setItem("analysisResult", JSON.stringify(MOCK_RESULT));
     renderPage();
-    expect(screen.getByText("Hémoglobine")).toBeInTheDocument();
-    expect(screen.getByText("Glucose")).toBeInTheDocument();
+    expect(screen.getAllByText("Hémoglobine").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Glucose").length).toBeGreaterThanOrEqual(1);
   });
 
   it("affiche la bannière des valeurs normales", () => {
@@ -85,5 +82,14 @@ describe("Page LabResultsPage — intégration", () => {
     localStorage.setItem("analysisResult", JSON.stringify(MOCK_RESULT));
     renderPage();
     expect(screen.getByRole("button", { name: /export.*pdf/i })).toBeInTheDocument();
+  });
+
+  it("affiche la conclusion quand elle est présente dans le stockage", () => {
+    localStorage.setItem("analysisResult", JSON.stringify(MOCK_RESULT));
+    renderPage();
+    expect(screen.getByRole("heading", { name: /conclusion de l'analyse/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/la glucose est au-dessus de l’intervalle habituel/i),
+    ).toBeInTheDocument();
   });
 });

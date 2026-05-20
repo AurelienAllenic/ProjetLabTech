@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type * as ReactRouterDom from "react-router-dom";
 import ManualValues from "../../pages/ManualValues";
+import { wrapWithAuth } from "../authTestUtils";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async (importOriginal) => {
@@ -17,10 +18,12 @@ const renderPage = (tests: string[] = ["Hémoglobine", "Glucose"]) =>
     <MemoryRouter
       initialEntries={[{ pathname: "/manual/values", state: { tests, sex: "homme", age: 30 } }]}
     >
-      <Routes>
-        <Route path="/manual/values" element={<ManualValues />} />
-      </Routes>
-    </MemoryRouter>
+      {wrapWithAuth(
+        <Routes>
+          <Route path="/manual/values" element={<ManualValues />} />
+        </Routes>,
+      )}
+    </MemoryRouter>,
   );
 
 describe("Page ManualValues — intégration", () => {

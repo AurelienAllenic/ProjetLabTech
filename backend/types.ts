@@ -3,6 +3,7 @@ export type UserRole = "laboratory" | "client";
 export interface AuthenticatedUser {
   id: string;
   email: string;
+  displayName: string;
   role: UserRole;
   createdAt: Date;
 }
@@ -31,6 +32,8 @@ export interface AnalysisResult {
   result: {
     elements: ApiElement[];
     warning?: string;
+    /** Synthèse rédigée par l’IA (PDF / analyse automatique) */
+    conclusion?: string;
   };
 }
 

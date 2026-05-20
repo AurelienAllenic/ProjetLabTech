@@ -7,22 +7,26 @@ import type { UserRole } from "../types.js";
 interface AuthUser {
   id: string;
   email: string;
+  displayName?: string;
 }
 
 interface CreateClientUserInput {
   email: string;
   password: string;
+  displayName?: string;
   createdBy: string;
 }
 
 interface CreateLaboratoryUserInput {
   email: string;
   password: string;
+  displayName?: string;
 }
 
 interface CreateUserWithAuthInput {
   email: string;
   password: string;
+  displayName?: string;
   role: UserRole;
   createdBy?: string;
 }
@@ -53,6 +57,13 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
   });
 }
 
+export async function listUsersCreatedBy(createdBy: string): Promise<User[]> {
+  return db.query.users.findMany({
+    where: eq(users.createdBy, createdBy),
+    orderBy: (usersTable, { desc }) => [desc(usersTable.createdAt)],
+  });
+}
+
 export async function getOrCreateUser(
   authUser: AuthUser,
   defaultRole: UserRole = "client"
@@ -68,6 +79,7 @@ export async function getOrCreateUser(
     .values({
       id: authUser.id,
       email: normalizeEmail(authUser.email),
+      displayName: normalizeDisplayName(authUser.displayName, authUser.email),
       role: defaultRole,
     })
     .onConflictDoNothing({ target: users.id })
@@ -89,11 +101,13 @@ export async function getOrCreateUser(
 export async function createClientUser({
   email,
   password,
+  displayName,
   createdBy,
 }: CreateClientUserInput): Promise<User> {
   return createUserWithAuth({
     email,
     password,
+    displayName,
     role: "client",
     createdBy,
   });
@@ -102,10 +116,12 @@ export async function createClientUser({
 export async function createLaboratoryUser({
   email,
   password,
+  displayName,
 }: CreateLaboratoryUserInput): Promise<User> {
   return createUserWithAuth({
     email,
     password,
+    displayName,
     role: "laboratory",
   });
 }
@@ -113,6 +129,7 @@ export async function createLaboratoryUser({
 async function createUserWithAuth({
   email,
   password,
+  displayName,
   role,
   createdBy,
 }: CreateUserWithAuthInput): Promise<User> {
@@ -128,6 +145,9 @@ async function createUserWithAuth({
     email: normalizedEmail,
     password,
     email_confirm: true,
+    user_metadata: {
+      display_name: normalizeDisplayName(displayName, normalizedEmail),
+    },
   });
 
   if (error) {
@@ -148,6 +168,7 @@ async function createUserWithAuth({
       .values({
         id: data.user.id,
         email: normalizeEmail(data.user.email),
+        displayName: normalizeDisplayName(displayName, data.user.email),
         role,
         createdBy,
       })
@@ -166,4 +187,14 @@ async function createUserWithAuth({
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function normalizeDisplayName(displayName: string | undefined, email: string): string {
+  const trimmed = displayName?.trim();
+
+  if (trimmed) {
+    return trimmed;
+  }
+
+  return normalizeEmail(email).split("@")[0] || normalizeEmail(email);
 }

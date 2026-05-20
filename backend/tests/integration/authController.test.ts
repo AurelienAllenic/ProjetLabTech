@@ -69,6 +69,7 @@ describe("login", () => {
     getOrCreateUserMock.mockResolvedValue({
       id: "uid-1",
       email: "user@demo.lab",
+      displayName: "User Demo",
       role: "client",
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
     });
@@ -83,7 +84,8 @@ describe("login", () => {
         user: expect.objectContaining({
           id: "uid-1",
           email: "user@demo.lab",
-          role: "client",
+          displayName: "User Demo",
+          role: "userLabo",
         }),
       }),
     );
@@ -104,6 +106,7 @@ describe("me", () => {
     const user = {
       id: "uid-1",
       email: "user@demo.lab",
+      displayName: "User Demo",
       role: "client",
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
     };
@@ -115,7 +118,8 @@ describe("me", () => {
       user: {
         id: user.id,
         email: user.email,
-        role: user.role,
+        displayName: user.displayName,
+        role: "userLabo",
         created_at: "2026-01-01T00:00:00.000Z",
       },
     });

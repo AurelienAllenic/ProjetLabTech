@@ -8,6 +8,7 @@ import TestValueCard from "../components/TestValueCard";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
 import { usePageTitle } from "../hooks/usePageTitle";
 import type { TestValueData, ManualNavigationState, AnalysisApiResult } from "../types";
+import { buildManualConclusion } from "../lib/manualConclusion";
 
 export default function ManualValues() {
   const navigate = useNavigate();
@@ -58,6 +59,7 @@ export default function ManualValues() {
         result: {
           elements,
           warning: "Analyse manuelle : interprétation simplifiée basée sur les valeurs renseignées.",
+          conclusion: buildManualConclusion(elements),
         },
       };
 

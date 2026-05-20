@@ -2,6 +2,7 @@ import "./env-bootstrap.js";
 import express, { type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import analyseRoutes from "./routes/analyseRoutes.js";
+import assignmentsRoute from "./routes/assignmentsRoute.js";
 import authRoute from "./routes/authRoute.js";
 import meRoute from "./routes/meRoute.js";
 import usersRoutes from "./routes/usersRoutes.js";
@@ -33,6 +34,7 @@ app.use(
 );
 
 app.use("/analyse", analyseRoutes);
+app.use("/assignments", assignmentsRoute);
 app.use("/auth", authRoute);
 app.use("/users", usersRoutes);
 app.use("/", meRoute);

@@ -85,6 +85,7 @@ describe("createClient", () => {
     createClientUserMock.mockResolvedValue({
       id: "client-1",
       email: "client@test.com",
+      displayName: "Client Test",
       role: "client",
       createdBy: "lab-1",
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -103,7 +104,8 @@ describe("createClient", () => {
       user: {
         id: "client-1",
         email: "client@test.com",
-        role: "client",
+        display_name: "Client Test",
+        role: "userLabo",
         created_by: "lab-1",
         created_at: "2026-01-01T00:00:00.000Z",
       },

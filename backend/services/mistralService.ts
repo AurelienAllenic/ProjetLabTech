@@ -46,9 +46,22 @@ CONTRAINTE CRITIQUE :
 - Si le document contient plus d'analyses, ignore-les
 - Ne dépasse jamais cette limite
 
+PRÉCISION DES CHIFFRES (obligatoire quand le PDF les contient) :
+- "taux" : une seule valeur mesurée suivie de son unité SI (ex. "14 g/dL", "5,2 mmol/L").
+- "intervalle" : deux bornes numériques et la même unité que la mesure (ex. "13,0 – 17,5 g/dL").
+- Utiliser la virgule comme séparateur décimal si c’est le cas dans le document.
+
+CONCLUSION (obligatoire, champ racine "conclusion") :
+- 2 à 4 phrases en français, vocabulaire accessible mais sérieux.
+- Résume l’essentiel : par exemple « vous avez une valeur trop élevée en … », ou plusieurs anomalies, ou que les résultats sont globalement dans les normes pour les analyses extraites.
+- Pour chaque écart notable, nomme le paramètre et indique s’il semble haut ou bas ; tu peux rappeler ce que cela peut évoquer de façon très générale (sans diagnostic ni traitement).
+- Ne prétends pas que tout le bilan médical est normal si le document est incomplet.
+- Termine toujours par une phrase précisant que seul un médecin ou un biologiste peut interpréter définitivement les résultats.
+
 Format OBLIGATOIRE :
 
 {
+  "conclusion": "...",
   "elements": [
     {
       "nom": "...",
