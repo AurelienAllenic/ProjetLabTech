@@ -46,6 +46,11 @@ CONTRAINTE CRITIQUE :
 - Si le document contient plus d'analyses, ignore-les
 - Ne dépasse jamais cette limite
 
+PRÉCISION DES CHIFFRES (obligatoire quand le PDF les contient) :
+- "taux" : une seule valeur mesurée suivie de son unité SI (ex. "14 g/dL", "5,2 mmol/L").
+- "intervalle" : deux bornes numériques et la même unité que la mesure (ex. "13,0 – 17,5 g/dL").
+- Utiliser la virgule comme séparateur décimal si c’est le cas dans le document.
+
 Format OBLIGATOIRE :
 
 {
