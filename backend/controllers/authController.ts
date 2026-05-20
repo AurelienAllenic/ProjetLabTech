@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { supabase } from "../lib/supabase.js";
+import { getSupabaseAdmin } from "../lib/supabaseAdmin.js";
 import { getOrCreateUser } from "../services/usersService.js";
 import type { UserRole } from "../types.js";
 
@@ -77,7 +78,7 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     return;
   }
 
-  const { data: resetToken, error } = await supabase
+  const { data: resetToken, error } = await getSupabaseAdmin()
     .from("password_reset_tokens")
     .select("id, user_id, expires_at, used_at")
     .eq("token", token)
@@ -96,7 +97,7 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     return;
   }
 
-  const { error: updateErr } = await supabase.auth.admin.updateUserById(
+  const { error: updateErr } = await getSupabaseAdmin().auth.admin.updateUserById(
     resetToken.user_id,
     { password },
   );
@@ -107,7 +108,7 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     return;
   }
 
-  await supabase
+  await getSupabaseAdmin()
     .from("password_reset_tokens")
     .update({ used_at: new Date().toISOString() })
     .eq("id", resetToken.id);

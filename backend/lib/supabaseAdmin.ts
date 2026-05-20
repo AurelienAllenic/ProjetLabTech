@@ -1,9 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../config/env.js";
 
-let supabaseAdmin: ReturnType<typeof createClient> | undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let supabaseAdmin: SupabaseClient<any> | undefined;
 
-export function getSupabaseAdmin(): ReturnType<typeof createClient> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getSupabaseAdmin(): SupabaseClient<any> {
   supabaseAdmin ??= createClient(
     env.SUPABASE_URL,
     env.SUPABASE_SERVICE_ROLE_KEY,

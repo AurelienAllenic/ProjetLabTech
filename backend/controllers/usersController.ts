@@ -5,7 +5,7 @@ import {
   listUsersCreatedBy,
   UserAlreadyExistsError,
 } from "../services/usersService.js";
-import { supabase } from "../lib/supabase.js";
+import { getSupabaseAdmin } from "../lib/supabaseAdmin.js";
 import { sendPasswordSetupEmail } from "../services/mailService.js";
 
 function serializeUser(user: Awaited<ReturnType<typeof createClientUser>>) {
@@ -53,7 +53,7 @@ export async function createClient(req: Request, res: Response): Promise<void> {
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-    await supabase.from("password_reset_tokens").insert({
+    await getSupabaseAdmin().from("password_reset_tokens").insert({
       user_id: user.id,
       token,
       expires_at: expiresAt,

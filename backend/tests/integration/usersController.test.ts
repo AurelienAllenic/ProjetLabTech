@@ -22,12 +22,12 @@ vi.mock("../../services/usersService.js", () => {
   };
 });
 
-vi.mock("../../lib/supabase.js", () => ({
-  supabase: {
+vi.mock("../../lib/supabaseAdmin.js", () => ({
+  getSupabaseAdmin: vi.fn().mockReturnValue({
     from: vi.fn().mockReturnValue({
       insert: vi.fn().mockResolvedValue({ error: null }),
     }),
-  },
+  }),
 }));
 
 vi.mock("../../services/mailService.js", () => ({
