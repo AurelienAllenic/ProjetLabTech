@@ -33,7 +33,7 @@ export default function Header() {
           aria-label="Retour à l'accueil – Lab'IA"
         >
           <img
-            src="/logo.png"
+            src="/logo2.png"
             alt="Logo Lab'IA"
             className="h-10 w-auto"
           />
