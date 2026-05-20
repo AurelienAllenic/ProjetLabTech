@@ -35,6 +35,31 @@ export function useScrollAnimations(): void {
         const variant = (el.dataset.animateVariant ?? "fade-up") as AnimateVariant;
         const delay   = parseFloat(el.dataset.animateDelay ?? "0");
         const from    = buildFrom(variant);
+        const animateOnce = el.hasAttribute("data-animate-once");
+
+        if (animateOnce) {
+          ScrollTrigger.create({
+            trigger: el,
+            start: "top 90%",
+            once: true,
+            onEnter: () => {
+              gsap.fromTo(
+                el,
+                from,
+                {
+                  opacity: 1,
+                  y: 0,
+                  x: 0,
+                  scale: 1,
+                  duration: 0.75,
+                  ease: "power3.out",
+                  delay,
+                },
+              );
+            },
+          });
+          return;
+        }
 
         // Tween en pause : on le contrôle via les callbacks ScrollTrigger
         const tween = gsap.fromTo(el, from, {
@@ -66,6 +91,25 @@ export function useScrollAnimations(): void {
         if (!children.length) return;
 
         const childFrom: gsap.TweenVars = { opacity: 0, y: 44 };
+        const animateOnce = group.hasAttribute("data-animate-once");
+
+        if (animateOnce) {
+          ScrollTrigger.create({
+            trigger: group,
+            start: "top 88%",
+            once: true,
+            onEnter: () => {
+              gsap.fromTo(children, childFrom, {
+                opacity: 1,
+                y: 0,
+                duration: 0.65,
+                ease: "power3.out",
+                stagger: 0.13,
+              });
+            },
+          });
+          return;
+        }
 
         const tween = gsap.fromTo(children, childFrom, {
           opacity: 1,
