@@ -122,6 +122,48 @@ export default function LabResultsPage(): JSX.Element {
           setPdfExportPhase(`Capture de la partie ${current} sur ${total}…`);
         },
       });
+      footerEl.innerHTML = `
+        <p style="margin:5px 0"><strong>Avis Important:</strong> Ce document est à titre informatif uniquement.</p>
+        <p style="margin:5px 0">Consultez toujours un professionnel de santé pour interpréter vos résultats.</p>
+      `;
+      exportElement.appendChild(footerEl);
+      document.body.appendChild(exportElement);
+
+      const canvas = await html2canvas(exportElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        allowTaint: true,
+        ignoreElements: (element) => element.tagName === "SCRIPT" || element.tagName === "STYLE",
+        onclone: (clonedDoc) => {
+          // html2canvas 1.4 ne supporte pas oklch (Tailwind v4) — on retire les stylesheets
+          // du doc cloné ; l'exportElement utilise uniquement des styles inline.
+          clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach((el) => el.remove());
+          const safe = clonedDoc.createElement("style");
+          safe.textContent = "* { box-sizing: border-box; }";
+          clonedDoc.head.appendChild(safe);
+        },
+      });
+      document.body.removeChild(exportElement);
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      pdf.save("Resultats_Medicaux.pdf");
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error("Erreur lors de l'export PDF:", msg);
@@ -451,9 +493,6 @@ export default function LabResultsPage(): JSX.Element {
           </main>
 
           <nav
-            data-animate
-            data-animate-once
-            data-animate-variant="fade-up"
             className="flex flex-wrap gap-4 mt-8"
             aria-label="Navigation des résultats"
           >

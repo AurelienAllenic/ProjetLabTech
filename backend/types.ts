@@ -17,7 +17,7 @@ export interface DbDocumentAssignment {
   user_id: string;
   document_id: string;
   document_title: string;
-  /** Chemin objet dans le bucket ; absent ou null pour les PDF d’exemple. */
+  /** Chemin objet dans le bucket ; absent ou null pour les PDF d'exemple. */
   storage_path: string | null;
   assigned_by: string;
   assigned_at: string;
@@ -43,6 +43,8 @@ declare global {
   namespace Express {
     interface Request {
       user?: JwtPayload;
+      originalImageBuffer?: Buffer;
+      originalImageMimeType?: string;
     }
   }
 }
@@ -62,7 +64,7 @@ export interface AnalysisResult {
   result: {
     elements: ApiElement[];
     warning?: string;
-    /** Synthèse rédigée par l’IA (PDF / analyse automatique) */
+    /** Synthèse rédigée par l'IA (PDF / analyse automatique) */
     conclusion?: string;
   };
 }
