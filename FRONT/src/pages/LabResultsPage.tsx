@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -11,6 +9,7 @@ import ResultsDeviationBars from "../components/ResultsDeviationBars";
 import ResultsDistributionPie from "../components/ResultsDistributionPie";
 import { apiElementToMedicalResult } from "../lib/analysisResultUi";
 import { formatLabNumber } from "../lib/labValueParse";
+import { exportLabResultsToPdf } from "../lib/pdfLabResultsExport";
 import type { MedicalResult, AnalysisApiResult, ParsedRangePosition, MedicalResultKind } from "../types";
 
 function labelForParsedPosition(p: ParsedRangePosition): string {
@@ -35,6 +34,9 @@ export default function LabResultsPage(): JSX.Element {
   const [focusedResultId, setFocusedResultId] = useState<number | null>(null);
   const [results, setResults] = useState<MedicalResult[]>([]);
   const [warning, setWarning] = useState<string>("");
+  const [conclusion, setConclusion] = useState<string>("");
+  const [pdfExportLoading, setPdfExportLoading] = useState(false);
+  const [pdfExportPhase, setPdfExportPhase] = useState("");
   useScrollAnimations();
 
   const normalCount = results.filter((r) => r.kind === "normal").length;
@@ -94,6 +96,7 @@ export default function LabResultsPage(): JSX.Element {
     const parsed = JSON.parse(stored) as AnalysisApiResult;
     const elements = parsed?.result?.elements ?? [];
     setWarning(typeof parsed?.result?.warning === "string" ? parsed.result.warning : "");
+    setConclusion(typeof parsed?.result?.conclusion === "string" ? parsed.result.conclusion.trim() : "");
 
     const mapped: MedicalResult[] = elements.map((el, index) =>
       apiElementToMedicalResult(el, index),
@@ -101,136 +104,31 @@ export default function LabResultsPage(): JSX.Element {
     setResults(mapped);
   }, []);
 
+  useEffect(() => {
+    if (!pdfExportLoading) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [pdfExportLoading]);
+
   const handlePDFExport = async (): Promise<void> => {
+    setPdfExportLoading(true);
+    setPdfExportPhase("Préparation du PDF…");
     try {
-      const exportElement = document.createElement("div");
-      Object.assign(exportElement.style, {
-        position: "absolute",
-        left: "-9999px",
-        backgroundColor: "#ffffff",
-        padding: "30px",
-        width: "210mm",
-        fontFamily: "Arial, sans-serif",
-        lineHeight: "1.6",
-        color: "#333333",
+      await exportLabResultsToPdf({
+        onProgress: (current, total) => {
+          setPdfExportPhase(`Capture de la partie ${current} sur ${total}…`);
+        },
       });
-
-      const title = document.createElement("h1");
-      title.textContent = "Résultats Médicaux";
-      Object.assign(title.style, {
-        fontSize: "28px",
-        fontWeight: "bold",
-        marginBottom: "10px",
-        color: "#1f2937",
-        borderBottom: "3px solid #7c3aed",
-        paddingBottom: "10px",
-      });
-      exportElement.appendChild(title);
-
-      const dateEl = document.createElement("p");
-      dateEl.textContent = `Date d'export: ${new Date().toLocaleDateString("fr-FR")}`;
-      Object.assign(dateEl.style, { marginBottom: "30px", fontSize: "13px", color: "#666666" });
-      exportElement.appendChild(dateEl);
-
-      const resultsSection = document.querySelector<HTMLElement>("[aria-label='Résumé des résultats']");
-      if (resultsSection) {
-        const summaryClone = resultsSection.cloneNode(true) as HTMLElement;
-        Object.assign(summaryClone.style, {
-          marginBottom: "30px",
-          padding: "15px",
-          backgroundColor: "#f9fafb",
-          borderRadius: "8px",
-        });
-        const summaryTitle = summaryClone.querySelector<HTMLElement>("h1");
-        if (summaryTitle) {
-          summaryTitle.style.fontSize = "18px";
-          summaryTitle.style.marginBottom = "15px";
-        }
-        exportElement.appendChild(summaryClone);
-      }
-
-      const detailsTitle = document.createElement("h2");
-      detailsTitle.textContent = "Résultats Détaillés";
-      Object.assign(detailsTitle.style, {
-        fontSize: "20px",
-        fontWeight: "bold",
-        marginTop: "30px",
-        marginBottom: "20px",
-        color: "#1f2937",
-      });
-      exportElement.appendChild(detailsTitle);
-
-      const mainContent = document.querySelector<HTMLElement>("#main-content");
-      if (mainContent) {
-        mainContent.querySelectorAll<HTMLElement>("article").forEach((article) => {
-          const clone = article.cloneNode(true) as HTMLElement;
-          Object.assign(clone.style, {
-            marginBottom: "20px",
-            padding: "20px",
-            border: "1px solid #e5e7eb",
-            borderRadius: "8px",
-            pageBreakInside: "avoid",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          });
-          const h3 = clone.querySelector<HTMLElement>("h3");
-          if (h3) {
-            h3.style.fontSize = "16px";
-            h3.style.marginBottom = "10px";
-            h3.style.color = "#1f2937";
-          }
-          clone.querySelectorAll<HTMLElement>("dd.result-value-large").forEach((dd) => {
-            Object.assign(dd.style, { fontSize: "22px", fontWeight: "bold", color: "#1f2937" });
-          });
-          exportElement.appendChild(clone);
-        });
-      }
-
-      const footerEl = document.createElement("div");
-      Object.assign(footerEl.style, {
-        marginTop: "40px",
-        paddingTop: "20px",
-        borderTop: "1px solid #e5e7eb",
-        fontSize: "11px",
-        color: "#666666",
-      });
-      footerEl.innerHTML = `
-        <p style="margin:5px 0"><strong>Avis Important:</strong> Ce document est à titre informatif uniquement.</p>
-        <p style="margin:5px 0">Consultez toujours un professionnel de santé pour interpréter vos résultats.</p>
-      `;
-      exportElement.appendChild(footerEl);
-      document.body.appendChild(exportElement);
-
-      const canvas = await html2canvas(exportElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        allowTaint: true,
-        ignoreElements: (element) => element.tagName === "SCRIPT" || element.tagName === "STYLE",
-      });
-      document.body.removeChild(exportElement);
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-      pdf.save("Resultats_Medicaux.pdf");
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error("Erreur lors de l'export PDF:", msg);
       alert("Erreur lors de l'export PDF: " + msg);
+    } finally {
+      setPdfExportLoading(false);
+      setPdfExportPhase("");
     }
   };
 
@@ -246,11 +144,11 @@ export default function LabResultsPage(): JSX.Element {
   };
 
   return (
-    <div className="w-screen min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-100">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-linear-to-br from-blue-50 via-white to-blue-100">
       <Header />
 
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <div className="w-full h-full">
+      <div className="max-w-4xl mx-auto min-w-0 w-full px-6 py-6 space-y-6 box-border">
+        <div className="w-full min-w-0">
           <div className="mt-24 flex justify-end">
             <Link
               to="/help"
@@ -260,26 +158,33 @@ export default function LabResultsPage(): JSX.Element {
             </Link>
           </div>
 
-          <section data-animate data-animate-variant="fade-up" className="p-6 mb-6" aria-label="Résumé des résultats">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="flex-1">
-                <h1 className="font-bold text-gray-900 text-2xl">Vos résultats</h1>
-                <p className="text-sm text-gray-500 mt-1">
-                  Synthèse issue de l&apos;analyse : valeur mesurée, intervalle de référence et interprétation.
-                </p>
+          <section
+            data-animate
+            data-animate-once
+            data-animate-variant="fade-up"
+            className="p-6 mb-6"
+            aria-label="Résumé des résultats"
+          >
+            <div data-pdf-segment="summary-copy">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="flex-1">
+                  <h1 className="font-bold text-gray-900 text-2xl">Vos résultats</h1>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Synthèse issue de l&apos;analyse : valeur mesurée, intervalle de référence et interprétation.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {warning ? (
-              <div
-                role="status"
-                className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
-              >
-                {warning}
-              </div>
-            ) : null}
+              {warning ? (
+                <div
+                  role="status"
+                  className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+                >
+                  {warning}
+                </div>
+              ) : null}
 
-            <div className="space-y-3" role="region" aria-label="Résumé du statut des résultats">
+              <div className="space-y-3" role="region" aria-label="Résumé du statut des résultats">
               {normalCount > 0 && (
                 <div
                   className="flex items-start gap-2 text-green-800 bg-green-50 p-3 rounded-lg border border-green-100"
@@ -383,10 +288,30 @@ export default function LabResultsPage(): JSX.Element {
                 </div>
               )}
             </div>
+            </div>
+
+            {conclusion ? (
+              <div
+                data-pdf-segment="conclusion"
+                className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                role="region"
+                aria-labelledby="analysis-conclusion-heading"
+              >
+                <h2 id="analysis-conclusion-heading" className="text-base font-semibold text-gray-900">
+                  Conclusion de l&apos;analyse
+                </h2>
+                <p className="mt-3 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{conclusion}</p>
+                <p className="mt-3 text-xs text-gray-500 leading-relaxed">
+                  Ce texte est fourni à titre informatif uniquement ; il ne constitue pas un diagnostic médical.
+                  Pour une interprétation fiable et toute décision de santé, adressez-vous à votre médecin ou à votre
+                  biologiste.
+                </p>
+              </div>
+            ) : null}
 
             {results.length > 0 ? (
               <div className="mt-8 grid gap-8 lg:grid-cols-2 lg:items-start">
-                <div className="space-y-4">
+                <div data-pdf-segment="chart-bars-block" className="space-y-4 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
                   <div>
                     <h2 className="text-base font-semibold text-gray-900">Synthèse visuelle et précision</h2>
                     <p className="text-sm text-gray-600 mt-2 leading-relaxed">
@@ -396,7 +321,10 @@ export default function LabResultsPage(): JSX.Element {
                   </div>
                   <ResultsDeviationBars results={results} />
                 </div>
-                <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div
+                  data-pdf-segment="chart-pie-block"
+                  className="min-w-0 rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
+                >
                   <h2 className="text-base font-semibold text-gray-900 mb-2 text-center lg:text-left">
                     Répartition par statut
                   </h2>
@@ -406,7 +334,7 @@ export default function LabResultsPage(): JSX.Element {
             ) : null}
           </section>
 
-          <main id="main-content" className="space-y-4" data-animate-group>
+          <main id="main-content" className="space-y-4">
             {results.length === 0 && (
               <p className="text-gray-600 text-sm">
                 Aucun résultat détecté automatiquement dans ce document.
@@ -415,7 +343,6 @@ export default function LabResultsPage(): JSX.Element {
             {results.map((result) => (
               <article
                 key={result.id}
-                data-animate-child
                 tabIndex={0}
                 data-result-id={result.id}
                 onKeyDown={(e) => handleKeyDown(e, result.id)}
@@ -499,13 +426,15 @@ export default function LabResultsPage(): JSX.Element {
                       {result.parsed?.valueNumeric != null &&
                       result.parsed.refLow != null &&
                       result.parsed.refHigh != null ? (
-                        <ParameterReferenceChart
-                          name={result.name}
-                          valueNumeric={result.parsed.valueNumeric}
-                          refLow={result.parsed.refLow}
-                          refHigh={result.parsed.refHigh}
-                          unit={result.parsed.unit}
-                        />
+                        <div data-pdf-segment="parameter-chart" className="mt-4">
+                          <ParameterReferenceChart
+                            name={result.name}
+                            valueNumeric={result.parsed.valueNumeric}
+                            refLow={result.parsed.refLow}
+                            refHigh={result.parsed.refHigh}
+                            unit={result.parsed.unit}
+                          />
+                        </div>
                       ) : null}
                     </div>
                     <span className="shrink-0 flex items-start justify-center sm:pt-1" aria-hidden="true">
@@ -523,6 +452,7 @@ export default function LabResultsPage(): JSX.Element {
 
           <nav
             data-animate
+            data-animate-once
             data-animate-variant="fade-up"
             className="flex flex-wrap gap-4 mt-8"
             aria-label="Navigation des résultats"
@@ -533,13 +463,43 @@ export default function LabResultsPage(): JSX.Element {
             >
               ← Retour à l&apos;accueil
             </Link>
-            <UiButton bg="raspberry" text="white" type="button" onClick={() => void handlePDFExport()}>
-              Export en PDF
+            <UiButton
+              bg="raspberry"
+              text="white"
+              type="button"
+              disabled={pdfExportLoading}
+              aria-busy={pdfExportLoading}
+              onClick={() => void handlePDFExport()}
+            >
+              {pdfExportLoading ? "Génération du PDF…" : "Export en PDF"}
             </UiButton>
           </nav>
         </div>
       </div>
       <Footer />
+
+      {pdfExportLoading ? (
+        <div
+          className="fixed inset-0 z-200 flex items-center justify-center bg-black/45 px-4 motion-safe:backdrop-blur-[2px]"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+          aria-label="Génération du PDF en cours"
+        >
+          <div className="max-w-sm rounded-2xl border border-gray-200 bg-white px-8 py-7 text-center shadow-xl">
+            <div
+              className="mx-auto mb-5 h-11 w-11 rounded-full border-[3px] border-raspberry-100 border-t-raspberry-600 motion-safe:animate-spin"
+              aria-hidden="true"
+            />
+            <p id="pdf-export-phase" className="text-base font-semibold text-gray-900">
+              {pdfExportPhase || "Génération du PDF…"}
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-gray-600">
+              Patientez quelques instants : chaque bloc de la page est capturé pour garantir une mise en page fidèle.
+            </p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

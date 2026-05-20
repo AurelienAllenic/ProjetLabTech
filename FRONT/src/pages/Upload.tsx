@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { X, UploadCloud, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
@@ -7,6 +7,28 @@ import Card from "../components/Card";
 import UiButton from "../components/UiButton";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
 import type { AnalysisApiResult } from "../types";
+
+const UPLOAD_ZONE_BUTTON_ID = "upload-file-zone";
+
+function shouldIgnoreGlobalUploadHotkey(uploadZoneButtonId: string): boolean {
+  const ae = document.activeElement;
+  if (!(ae instanceof HTMLElement)) return false;
+
+  if (ae.closest("footer")) return true;
+
+  if (
+    ae instanceof HTMLInputElement ||
+    ae instanceof HTMLTextAreaElement ||
+    ae instanceof HTMLSelectElement
+  ) {
+    return true;
+  }
+  if (ae.isContentEditable) return true;
+  if (ae instanceof HTMLAnchorElement && ae.hasAttribute("href")) return true;
+  if (ae instanceof HTMLButtonElement && ae.id !== uploadZoneButtonId) return true;
+
+  return false;
+}
 
 export default function Upload() {
   const navigate = useNavigate();
@@ -17,9 +39,36 @@ export default function Upload() {
 
   const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 
-  const handleClick = (): void => {
-    inputRef.current?.click();
-  };
+  /** Après sélection d’un fichier : premier contrôle pertinent = « Supprimer » (annuler avant analyse). */
+  useEffect(() => {
+    if (!file) return;
+    const handle = window.requestAnimationFrame(() => {
+      document.getElementById("upload-remove-file")?.focus();
+    });
+    return () => window.cancelAnimationFrame(handle);
+  }, [file]);
+
+  /**
+   * Entrée ou Espace ouvrent le sélecteur sans être obligé de focaliser la carte
+   * (écoute en capture pour bloquer le défilement au clavier avec la barre d’espace).
+   */
+  useEffect(() => {
+    if (file !== null || loading) return;
+
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (e.defaultPrevented) return;
+      const isActivate = e.key === "Enter" || e.key === " " || e.code === "Space";
+      if (!isActivate) return;
+      if (e.repeat) return;
+      if (shouldIgnoreGlobalUploadHotkey(UPLOAD_ZONE_BUTTON_ID)) return;
+
+      e.preventDefault();
+      inputRef.current?.click();
+    };
+
+    window.addEventListener("keydown", onKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
+  }, [file, loading]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const selected = e.target.files?.[0];
@@ -30,8 +79,10 @@ export default function Upload() {
     setFile(null);
     if (inputRef.current) {
       inputRef.current.value = "";
-      inputRef.current.focus();
     }
+    window.queueMicrotask(() => {
+      document.getElementById(UPLOAD_ZONE_BUTTON_ID)?.focus();
+    });
   };
 
   const sendPdf = async (): Promise<void> => {
@@ -67,17 +118,14 @@ export default function Upload() {
         id="main-content"
         role="main"
         aria-labelledby="page-title"
-        className="relative min-h-screen flex items-center justify-center px-4 py-24"
+        tabIndex={-1}
+        className="relative min-h-screen flex items-center justify-center px-4 py-24 scroll-mt-28 outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-50 rounded-sm"
       >
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="absolute top-24 right-6 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded"
+        <section
+          aria-labelledby="page-title"
+          aria-busy={loading}
+          className="max-w-[560px] w-full flex flex-col gap-6"
         >
-          <X size={18} aria-hidden="true" /> Fermer
-        </button>
-
-        <div className="max-w-[560px] w-full flex flex-col gap-6">
           <div data-animate data-animate-variant="fade-up">
             <h1 id="page-title" className="text-base font-semibold text-gray-900">
               Téléversez votre rapport de laboratoire
@@ -86,7 +134,8 @@ export default function Upload() {
 
           <div data-animate data-animate-variant="zoom" data-animate-delay="0.1">
             <Card
-              onClick={!file ? handleClick : undefined}
+              onOpenFilePicker={file ? undefined : () => inputRef.current?.click()}
+              uploadZoneButtonId={file ? undefined : UPLOAD_ZONE_BUTTON_ID}
               ariaLabel={
                 file ? "Fichier chargé" : "Téléverser un fichier de rapport de laboratoire"
               }
@@ -113,6 +162,7 @@ export default function Upload() {
             ref={inputRef}
             id="file-upload"
             type="file"
+            tabIndex={-1}
             accept=".pdf,.csv,.txt,.png,.jpg,.jpeg"
             onChange={handleFileChange}
             className="sr-only"
@@ -120,39 +170,52 @@ export default function Upload() {
             aria-describedby="file-upload-hint"
           />
           <p id="file-upload-hint" className="sr-only">
-            Formats acceptés : PDF, CSV, TXT, PNG, JPG.
+            Sur cette page, Entrée ou Espace ouvre le sélecteur. Formats acceptés : PDF, CSV, TXT, PNG,
+            JPG.
           </p>
           <div aria-live="polite" className="sr-only">
             {file ? `Fichier ${file.name} sélectionné` : ""}
           </div>
 
-          {file && (
+          {file ? (
             <div className="flex justify-center">
               <button
+                id="upload-remove-file"
                 type="button"
                 onClick={removeFile}
                 aria-label="Supprimer le fichier sélectionné"
-                className="text-sm text-raspberry-600 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400"
+                className="text-sm text-raspberry-600 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded px-1"
               >
                 Supprimer le fichier
               </button>
             </div>
-          )}
+          ) : null}
 
-          {file && (
+          {file ? (
             <UiButton
+              id="upload-submit-analysis"
               bg="raspberry"
               text="white"
+              type="button"
+              disabled={loading}
+              aria-busy={loading}
               onClick={() => {
                 void sendPdf();
               }}
-              disabled={loading}
               className={`w-full py-3 text-base ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
             >
               {loading ? "Analyse en cours..." : "Analyser ce rapport"}
             </UiButton>
-          )}
-        </div>
+          ) : null}
+        </section>
+
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="absolute top-24 right-6 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 rounded z-10"
+        >
+          <X size={18} aria-hidden="true" /> Fermer
+        </button>
       </main>
       <Footer />
     </div>

@@ -30,9 +30,48 @@ describe("Page Upload — intégration", () => {
     expect(screen.getByRole("heading", { name: /téléversez votre rapport/i })).toBeInTheDocument();
   });
 
-  it("affiche la carte d'upload avec le bon label", () => {
+  it("affiche la carte d'upload comme bouton accessible pour choisir un fichier", () => {
     renderPage();
-    expect(screen.getByRole("button", { name: /téléverser un fichier/i })).toBeInTheDocument();
+    const uploadZone = document.getElementById("upload-file-zone");
+    expect(uploadZone).toBeInstanceOf(HTMLButtonElement);
+    expect(uploadZone).toHaveAccessibleName(/téléverser un fichier/i);
+  });
+
+  it("ouvre le sélecteur avec Entrée ou Espace depuis la zone principale (sans focus carte)", () => {
+    renderPage();
+    const input = document.querySelector<HTMLInputElement>("#file-upload");
+    if (!input) throw new Error("Input #file-upload introuvable");
+    const clickSpy = vi.spyOn(input, "click").mockImplementation(() => undefined);
+
+    document.getElementById("main-content")?.focus();
+
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+    );
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+
+    clickSpy.mockClear();
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: " ", code: "Space", bubbles: true, cancelable: true }),
+    );
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+
+    clickSpy.mockRestore();
+  });
+
+  it("n'ouvre pas le sélecteur avec Entrée lorsque le focus est sur Fermer", () => {
+    renderPage();
+    const input = document.querySelector<HTMLInputElement>("#file-upload");
+    if (!input) throw new Error("Input #file-upload introuvable");
+    const clickSpy = vi.spyOn(input, "click").mockImplementation(() => undefined);
+
+    screen.getByRole("button", { name: /fermer/i }).focus();
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+    );
+    expect(clickSpy).not.toHaveBeenCalled();
+
+    clickSpy.mockRestore();
   });
 
   it("navigue vers / au clic sur la croix", () => {
