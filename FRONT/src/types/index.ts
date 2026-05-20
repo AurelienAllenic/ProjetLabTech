@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 /** Données saisies pour un test de laboratoire */
 export interface TestValueData {
   value: string;
@@ -10,6 +12,7 @@ export interface TestValueData {
 export interface ApiElement {
   nom?: string;
   taux?: string;
+  intervalle?: string;
   categorie?: string;
   explication?: string;
 }
@@ -23,13 +26,18 @@ export interface AnalysisApiResult {
   };
 }
 
-import type { ReactNode } from "react";
+export type MedicalResultKind = "normal" | "low" | "high" | "attention";
 
 /** Un résultat médical formaté pour l'affichage */
 export interface MedicalResult {
   id: number;
   name: string;
   value: string;
+  /** Intervalle de référence affiché tel que renvoyé par l’API */
+  referenceRange: string;
+  /** Libellé brut ou dérivé de `categorie` (ex. trop bas, trop élevé) */
+  categoryLabel: string;
+  kind: MedicalResultKind;
   status: "normal" | "abnormal";
   resultIcon: ReactNode;
   color: string;

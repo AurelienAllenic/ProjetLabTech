@@ -14,9 +14,22 @@ vi.mock("../../hooks/useScrollAnimations", () => ({ useScrollAnimations: () => u
 const MOCK_RESULT = {
   success: true,
   result: {
+    warning: "Analyse automatique — à titre indicatif.",
     elements: [
-      { nom: "Hémoglobine", taux: "14 g/dL", categorie: "normal",   explication: "Taux normal." },
-      { nom: "Glucose",     taux: "6 mmol/L", categorie: "abnormal", explication: "Légèrement élevé." },
+      {
+        nom: "Hémoglobine",
+        taux: "14 g/dL",
+        intervalle: "13.0 – 17.5 g/dL",
+        categorie: "normal",
+        explication: "Taux normal.",
+      },
+      {
+        nom: "Glucose",
+        taux: "6 mmol/L",
+        intervalle: "3.9 – 5.5 mmol/L",
+        categorie: "abnormal",
+        explication: "Légèrement élevé.",
+      },
     ],
   },
 };
@@ -46,13 +59,19 @@ describe("Page LabResultsPage — intégration", () => {
   it("affiche la bannière des valeurs normales", () => {
     localStorage.setItem("analysisResult", JSON.stringify(MOCK_RESULT));
     renderPage();
-    expect(screen.getByText(/1 valeur.*normale/i)).toBeInTheDocument();
+    expect(screen.getByText(/dans la norme/i)).toBeInTheDocument();
   });
 
   it("affiche la bannière des valeurs à surveiller", () => {
     localStorage.setItem("analysisResult", JSON.stringify(MOCK_RESULT));
     renderPage();
-    expect(screen.getByText(/1 valeur.*surveiller/i)).toBeInTheDocument();
+    expect(screen.getByText(/à surveiller/i)).toBeInTheDocument();
+  });
+
+  it("affiche l'intervalle de référence renvoyé par l'API", () => {
+    localStorage.setItem("analysisResult", JSON.stringify(MOCK_RESULT));
+    renderPage();
+    expect(screen.getByText("13.0 – 17.5 g/dL")).toBeInTheDocument();
   });
 
   it("affiche les explications des résultats", () => {

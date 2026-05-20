@@ -1,3 +1,4 @@
+import "./env-bootstrap.js";
 import express, { type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import analyseRoutes from "./routes/analyseRoutes.js";
