@@ -6,7 +6,7 @@ import UiButton from "../../components/UiButton";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useScrollAnimations } from "../../hooks/useScrollAnimations";
-import { apiGet, apiPost } from "../../lib/api";
+import { apiGet, apiPost, apiPostFormData } from "../../lib/api";
 import sampleDocsJson from "../../mocks/sample-documents.json";
 import type { DocumentAssignment, ManagedLabAccount, SampleDocument } from "../../types/auth";
 
@@ -39,6 +39,7 @@ function toAssignment(a: ApiAssignment): DocumentAssignment {
     documentTitle: a.document_title,
     assignedToEmail: a.users?.email ?? "",
     assignedAt: a.assigned_at,
+    storagePath: a.storage_path ?? null,
   };
 }
 
@@ -73,6 +74,9 @@ export default function LaboDashboard(): ReactElement | null {
 
   const [assignEmail,   setAssignEmail]   = useState("");
   const [assignDocId,   setAssignDocId]   = useState(SAMPLE_DOCUMENTS[0]?.id ?? "");
+  /** « sample » : liste mock ; « upload » : fichier PDF téléversé vers Supabase Storage */
+  const [assignSource, setAssignSource] = useState<"sample" | "upload">("sample");
+  const [assignFile, setAssignFile] = useState<File | null>(null);
   const [assignMsg,     setAssignMsg]     = useState("");
   const [assignLoading, setAssignLoading] = useState(false);
 
@@ -129,17 +133,34 @@ export default function LaboDashboard(): ReactElement | null {
   const handleAssign = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setAssignMsg("");
-    const doc = SAMPLE_DOCUMENTS.find((d) => d.id === assignDocId);
-    if (!doc) { setAssignMsg("Document inconnu."); return; }
     setAssignLoading(true);
     try {
-      const { assignment } = await apiPost<{ assignment: ApiAssignment }>("/assignments", {
-        assignedToEmail: assignEmail,
-        documentId: doc.id,
-        documentTitle: doc.title,
-      });
-      setAssignments((prev) => [toAssignment(assignment), ...prev]);
-      setAssignMsg(`Document « ${doc.title} » attribué à ${assignEmail}.`);
+      if (assignSource === "upload") {
+        if (!assignFile) {
+          setAssignMsg("Choisissez un fichier PDF.");
+          return;
+        }
+        const fd = new FormData();
+        fd.append("assignedToEmail", assignEmail);
+        fd.append("pdf", assignFile);
+        const { assignment } = await apiPostFormData<{ assignment: ApiAssignment }>("/assignments/upload", fd);
+        setAssignments((prev) => [toAssignment(assignment), ...prev]);
+        setAssignMsg(`PDF « ${assignment.document_title} » attribué à ${assignEmail}.`);
+        setAssignFile(null);
+      } else {
+        const doc = SAMPLE_DOCUMENTS.find((d) => d.id === assignDocId);
+        if (!doc) {
+          setAssignMsg("Document inconnu.");
+          return;
+        }
+        const { assignment } = await apiPost<{ assignment: ApiAssignment }>("/assignments", {
+          assignedToEmail: assignEmail,
+          documentId: doc.id,
+          documentTitle: doc.title,
+        });
+        setAssignments((prev) => [toAssignment(assignment), ...prev]);
+        setAssignMsg(`Document « ${doc.title} » attribué à ${assignEmail}.`);
+      }
     } catch (err) {
       setAssignMsg(err instanceof Error ? err.message : "Erreur lors de l'attribution.");
     } finally {
@@ -238,21 +259,73 @@ export default function LaboDashboard(): ReactElement | null {
                       ))}
                 </select>
               </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="assign-document" className="text-sm font-medium text-gray-700">Document</label>
-                <select
-                  id="assign-document"
-                  value={assignDocId}
-                  onChange={(e) => setAssignDocId(e.target.value)}
-                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-raspberry-400"
-                >
-                  {SAMPLE_DOCUMENTS.map((d) => (
-                    <option key={d.id} value={d.id}>{d.title} — {d.filename}</option>
-                  ))}
-                </select>
-              </div>
+              <fieldset className="flex flex-col gap-2 border-0 p-0 m-0">
+                <legend className="text-sm font-medium text-gray-700 mb-1">Source du document</legend>
+                <div className="flex flex-wrap gap-4">
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="assign-source"
+                      checked={assignSource === "sample"}
+                      onChange={() => { setAssignSource("sample"); setAssignMsg(""); }}
+                      className="text-raspberry-600 focus:ring-raspberry-400"
+                    />
+                    Exemples (liste)
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="assign-source"
+                      checked={assignSource === "upload"}
+                      onChange={() => { setAssignSource("upload"); setAssignMsg(""); }}
+                      className="text-raspberry-600 focus:ring-raspberry-400"
+                    />
+                    Mon PDF (téléversement)
+                  </label>
+                </div>
+              </fieldset>
+
+              {assignSource === "sample" ? (
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="assign-document" className="text-sm font-medium text-gray-700">Document</label>
+                  <select
+                    id="assign-document"
+                    value={assignDocId}
+                    onChange={(e) => setAssignDocId(e.target.value)}
+                    className="rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-raspberry-400"
+                  >
+                    {SAMPLE_DOCUMENTS.map((d) => (
+                      <option key={d.id} value={d.id}>{d.title} — {d.filename}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="assign-pdf-file" className="text-sm font-medium text-gray-700">Fichier PDF</label>
+                  <input
+                    id="assign-pdf-file"
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    onChange={(e) => setAssignFile(e.target.files?.[0] ?? null)}
+                    className="text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-raspberry-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-raspberry-800 hover:file:bg-raspberry-200"
+                  />
+                  {assignFile && (
+                    <p className="text-xs text-gray-500">Sélectionné : {assignFile.name}</p>
+                  )}
+                </div>
+              )}
               {assignMsg && <p role="status" className="text-sm text-gray-600">{assignMsg}</p>}
-              <UiButton type="submit" bg="raspberry" text="white" className="w-fit px-6" disabled={accounts.length === 0 || assignLoading}>
+              <UiButton
+                type="submit"
+                bg="raspberry"
+                text="white"
+                className="w-fit px-6"
+                disabled={
+                  accounts.length === 0 ||
+                  assignLoading ||
+                  (assignSource === "upload" && !assignFile)
+                }
+              >
                 {assignLoading ? "Attribution..." : "Attribuer"}
               </UiButton>
             </form>
@@ -303,6 +376,7 @@ export default function LaboDashboard(): ReactElement | null {
                 <thead>
                   <tr className="border-b border-gray-100">
                     <th scope="col" className="px-4 py-3 font-semibold text-gray-700">Document</th>
+                    <th scope="col" className="px-4 py-3 font-semibold text-gray-700">Type</th>
                     <th scope="col" className="px-4 py-3 font-semibold text-gray-700">Destinataire</th>
                     <th scope="col" className="px-4 py-3 font-semibold text-gray-700">Date</th>
                   </tr>
@@ -311,6 +385,9 @@ export default function LaboDashboard(): ReactElement | null {
                   {assignments.map((r) => (
                     <tr key={r.id} className="border-b border-gray-50">
                       <td className="px-4 py-3 text-gray-800">{r.documentTitle}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {r.storagePath ? "PDF stocké" : "Exemple"}
+                      </td>
                       <td className="px-4 py-3 text-gray-600">{r.assignedToEmail}</td>
                       <td className="px-4 py-3 text-gray-500">{new Date(r.assignedAt).toLocaleString("fr-FR")}</td>
                     </tr>

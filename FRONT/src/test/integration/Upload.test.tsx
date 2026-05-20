@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import type * as ReactRouterDom from "react-router-dom";
 import Upload from "../../pages/Upload";
+import { wrapWithRouterAndAuth } from "../authTestUtils";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async (importOriginal) => {
@@ -12,12 +12,7 @@ vi.mock("react-router-dom", async (importOriginal) => {
 
 vi.mock("../../hooks/useScrollAnimations", () => ({ useScrollAnimations: () => undefined }));
 
-const renderPage = () =>
-  render(
-    <MemoryRouter>
-      <Upload />
-    </MemoryRouter>
-  );
+const renderPage = () => render(wrapWithRouterAndAuth(<Upload />));
 
 describe("Page Upload — intégration", () => {
   beforeEach(() => {
