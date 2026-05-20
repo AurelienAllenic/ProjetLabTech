@@ -25,6 +25,32 @@ body {
   margin: 0;
 }
 
+/* react-image-crop — modale Lab’IA : document zoomable avec scroll dans le viewport. */
+.labia-image-crop-scope.ReactCrop {
+  max-width: none !important;
+  --rc-drag-handle-size: 14px;
+  --rc-drag-handle-mobile-size: 30px;
+  --rc-drag-bar-size: 10px;
+}
+
+.labia-image-crop-scope .ReactCrop__child-wrapper {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* Pas de max-* sur l’img (sinon zoom inutile) ; tactile : scroll + léger pinch (recadrage géré par react-image-crop). */
+.labia-image-crop-scope:not(.ReactCrop--disabled) .ReactCrop__child-wrapper > div > img {
+  display: block;
+  max-width: none !important;
+  max-height: none !important;
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
+/* Mode masques : la poignée du cadre principal ne capte plus les clics — les cadres noirs passent au-dessus par hit-test. */
+.labia-mask-edit-mode.ReactCrop .ReactCrop__crop-selection {
+  pointer-events: none;
+}
+
 #root {
   min-height: 100vh;
 }

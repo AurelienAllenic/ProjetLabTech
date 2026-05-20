@@ -43,14 +43,14 @@ describe("UserLaboDashboard — intégration", () => {
     expect(screen.getByText(/saisie manuelle/i)).toBeInTheDocument();
   });
 
-  it("affiche le bouton de déconnexion", () => {
+  it("affiche le bouton de déconnexion dans l’en-tête", () => {
     renderPage();
-    expect(screen.getByRole("button", { name: /déconnexion/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /se déconnecter/i })).toBeInTheDocument();
   });
 
-  it("appelle logout au clic sur le bouton Déconnexion", () => {
+  it("appelle logout au clic sur Déconnexion (nav)", () => {
     renderPage();
-    fireEvent.click(screen.getByRole("button", { name: /déconnexion/i }));
+    fireEvent.click(screen.getByRole("button", { name: /se déconnecter/i }));
     expect(mockLogout).toHaveBeenCalled();
   });
 

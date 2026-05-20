@@ -7,6 +7,7 @@ import Card from "../components/Card";
 import UiButton from "../components/UiButton";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
 import type { AnalysisApiResult } from "../types";
+import { UPLOAD_FILE_ACCEPT, UPLOAD_FILE_FORMATS_LABEL } from "../constants/uploadFormats";
 
 const UPLOAD_ZONE_BUTTON_ID = "upload-file-zone";
 
@@ -162,14 +163,15 @@ export default function Upload() {
             ref={inputRef}
             id="file-upload"
             type="file"
-            accept=".pdf,.png,.jpg,.jpeg"
+            tabIndex={-1}
+            accept={UPLOAD_FILE_ACCEPT}
             onChange={handleFileChange}
             className="sr-only"
             aria-label="Sélectionner un fichier de rapport de laboratoire"
             aria-describedby="file-upload-hint"
           />
           <p id="file-upload-hint" className="sr-only">
-            Formats acceptés : PDF, PNG, JPG.
+            {`Sur cette page, Entrée ou Espace ouvre le sélecteur. Formats acceptés : ${UPLOAD_FILE_FORMATS_LABEL}.`}
           </p>
           <div aria-live="polite" className="sr-only">
             {file ? `Fichier ${file.name} sélectionné` : ""}
