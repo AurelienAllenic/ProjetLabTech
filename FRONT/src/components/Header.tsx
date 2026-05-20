@@ -26,7 +26,7 @@ export default function Header() {
           aria-label="Retour à l'accueil – Lab'IA"
         >
           <img
-            src="/logo5.png"
+            src="/logo2.png"
             alt="Logo Lab'IA"
             className="h-20 w-auto"
           />
