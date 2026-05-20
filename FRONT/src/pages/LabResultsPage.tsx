@@ -140,6 +140,14 @@ export default function LabResultsPage(): JSX.Element {
         backgroundColor: "#ffffff",
         allowTaint: true,
         ignoreElements: (element) => element.tagName === "SCRIPT" || element.tagName === "STYLE",
+        onclone: (clonedDoc) => {
+          // html2canvas 1.4 ne supporte pas oklch (Tailwind v4) — on retire les stylesheets
+          // du doc cloné ; l'exportElement utilise uniquement des styles inline.
+          clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach((el) => el.remove());
+          const safe = clonedDoc.createElement("style");
+          safe.textContent = "* { box-sizing: border-box; }";
+          clonedDoc.head.appendChild(safe);
+        },
       });
       document.body.removeChild(exportElement);
 
@@ -335,8 +343,6 @@ export default function LabResultsPage(): JSX.Element {
           </main>
 
           <nav
-            data-animate
-            data-animate-variant="fade-up"
             className="flex flex-wrap gap-4 mt-8"
             aria-label="Navigation des résultats"
           >

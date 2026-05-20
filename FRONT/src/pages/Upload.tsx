@@ -104,7 +104,7 @@ export default function Upload() {
               description={
                 file
                   ? file.name
-                  : "Appuyez sur Entrée ou Espace pour parcourir les fichiers. Formats acceptés : PDF, CSV, TXT, PNG, JPG"
+                  : "Appuyez sur Entrée ou Espace pour parcourir les fichiers. Formats acceptés : PDF, PNG, JPG"
               }
             />
           </div>
@@ -113,14 +113,14 @@ export default function Upload() {
             ref={inputRef}
             id="file-upload"
             type="file"
-            accept=".pdf,.csv,.txt,.png,.jpg,.jpeg"
+            accept=".pdf,.png,.jpg,.jpeg"
             onChange={handleFileChange}
             className="sr-only"
             aria-label="Sélectionner un fichier de rapport de laboratoire"
             aria-describedby="file-upload-hint"
           />
           <p id="file-upload-hint" className="sr-only">
-            Formats acceptés : PDF, CSV, TXT, PNG, JPG.
+            Formats acceptés : PDF, PNG, JPG.
           </p>
           <div aria-live="polite" className="sr-only">
             {file ? `Fichier ${file.name} sélectionné` : ""}

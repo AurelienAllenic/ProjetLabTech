@@ -11,7 +11,7 @@ function getMistralApiKey(): string {
   return key.trim();
 }
 
-/** Corps d’erreur Mistral : souvent `{ message, type, code }` à la racine, pas `{ error: { message } }`. */
+/** Corps d'erreur Mistral : souvent `{ message, type, code }` à la racine, pas `{ error: { message } }`. */
 function mistralErrorMessage(status: number, body: unknown, rawText: string): string {
   if (body && typeof body === "object") {
     const o = body as Record<string, unknown>;
@@ -30,7 +30,7 @@ function mistralErrorMessage(status: number, body: unknown, rawText: string): st
   return trimmed || `Erreur HTTP ${status} depuis l'API Mistral`;
 }
 
-const PROMPT_TEMPLATE_IMAGE = `
+const SHARED_RULES = `
 Tu dois répondre STRICTEMENT avec un JSON valide et COMPLET.
 Aucun texte avant ou après.
 
@@ -46,9 +46,22 @@ CONTRAINTE CRITIQUE :
 - Si le document contient plus d'analyses, ignore-les
 - Ne dépasse jamais cette limite
 
+PRÉCISION DES CHIFFRES (obligatoire quand le document les contient) :
+- "taux" : une seule valeur mesurée suivie de son unité SI (ex. "14 g/dL", "5,2 mmol/L").
+- "intervalle" : deux bornes numériques et la même unité que la mesure (ex. "13,0 – 17,5 g/dL").
+- Utiliser la virgule comme séparateur décimal si c'est le cas dans le document.
+
+CONCLUSION (obligatoire, champ racine "conclusion") :
+- 2 à 4 phrases en français, vocabulaire accessible mais sérieux.
+- Résume l'essentiel : par exemple « vous avez une valeur trop élevée en … », ou plusieurs anomalies, ou que les résultats sont globalement dans les normes pour les analyses extraites.
+- Pour chaque écart notable, nomme le paramètre et indique s'il semble haut ou bas ; tu peux rappeler ce que cela peut évoquer de façon très générale (sans diagnostic ni traitement).
+- Ne prétends pas que tout le bilan médical est normal si le document est incomplet.
+- Termine toujours par une phrase précisant que seul un médecin ou un biologiste peut interpréter définitivement les résultats.
+
 Format OBLIGATOIRE :
 
 {
+  "conclusion": "...",
   "elements": [
     {
       "nom": "...",
@@ -59,45 +72,63 @@ Format OBLIGATOIRE :
     }
   ]
 }
-
-Analyse le résultat d'analyse de laboratoire visible dans cette image.
 `;
 
-const PROMPT_TEMPLATE = `
-Tu dois répondre STRICTEMENT avec un JSON valide et COMPLET.
-Aucun texte avant ou après.
-
-RÈGLES ABSOLUES :
-- Le JSON doit être entièrement fermé
-- Tous les objets doivent être complets
-- Ne JAMAIS couper une valeur
-- Si la réponse est trop longue, résume les explications MAIS termine toujours le JSON
-- Ne mets AUCUN commentaire
-
-CONTRAINTE CRITIQUE :
-- Tu dois retourner AU MAXIMUM 8 éléments dans "elements"
-- Si le document contient plus d'analyses, ignore-les
-- Ne dépasse jamais cette limite
-
-Format OBLIGATOIRE :
-
-{
-  "elements": [
-    {
-      "nom": "...",
-      "taux": "...",
-      "intervalle": "...",
-      "categorie": "correct | trop élevé | trop bas",
-      "explication": "..."
-    }
-  ]
-}
-
+const PROMPT_TEMPLATE = `${SHARED_RULES}
 Analyse le texte suivant :
 """
 {{TEXT_FROM_PDF}}
 """
 `;
+
+const PROMPT_TEMPLATE_IMAGE = `${SHARED_RULES}
+Analyse le résultat d'analyse de laboratoire visible dans cette image.
+`;
+
+export async function generateTextFromPdf(pdfText: string): Promise<string> {
+  const prompt = PROMPT_TEMPLATE.replace("{{TEXT_FROM_PDF}}", pdfText);
+  const apiKey = getMistralApiKey();
+
+  const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "mistral-small-latest",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.2,
+      max_tokens: 3000,
+    }),
+  });
+
+  const rawText = await response.text();
+  let parsed: unknown;
+  try {
+    parsed = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    console.error(
+      "[Mistral] Réponse non-JSON (HTTP %s): %s",
+      response.status,
+      rawText.slice(0, 500),
+    );
+    throw new Error(`Réponse Mistral invalide (HTTP ${response.status})`);
+  }
+
+  if (!response.ok) {
+    const msg = mistralErrorMessage(response.status, parsed, rawText);
+    console.error("[Mistral] HTTP %s — %s", response.status, msg);
+    throw new Error(msg);
+  }
+
+  const data = parsed as MistralApiResponse;
+  let content = data.choices?.[0]?.message?.content ?? "";
+  content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
+
+  console.log("🧠 IA RAW LENGTH:", content.length);
+  return content;
+}
 
 export async function generateTextFromImage(base64: string, mimeType: string): Promise<string> {
   const apiKey = getMistralApiKey();
@@ -147,52 +178,5 @@ export async function generateTextFromImage(base64: string, mimeType: string): P
   content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
 
   console.log("🧠 IA Vision RAW LENGTH:", content.length);
-  return content;
-}
-
-export async function generateTextFromPdf(pdfText: string): Promise<string> {
-  const prompt = PROMPT_TEMPLATE.replace("{{TEXT_FROM_PDF}}", pdfText);
-  const apiKey = getMistralApiKey();
-
-  const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "mistral-small-latest",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.2,
-      max_tokens: 3000,
-    }),
-  });
-
-  const rawText = await response.text();
-  let parsed: unknown;
-  try {
-    parsed = rawText ? JSON.parse(rawText) : {};
-  } catch {
-    console.error(
-      "[Mistral] Réponse non-JSON (HTTP %s): %s",
-      response.status,
-      rawText.slice(0, 500),
-    );
-    throw new Error(`Réponse Mistral invalide (HTTP ${response.status})`);
-  }
-
-  if (!response.ok) {
-    const msg = mistralErrorMessage(response.status, parsed, rawText);
-    console.error("[Mistral] HTTP %s — %s", response.status, msg);
-    throw new Error(msg);
-  }
-
-  const data = parsed as MistralApiResponse;
-
-  let content = data.choices?.[0]?.message?.content ?? "";
-  content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
-
-  console.log("🧠 IA RAW LENGTH:", content.length);
-
   return content;
 }
