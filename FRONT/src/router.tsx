@@ -28,8 +28,22 @@ export const router = createBrowserRouter([
         ),
       },
       { path: "/upload",          element: <Upload /> },
-      { path: "/manual",          element: <Manual /> },
-      { path: "/manual/values",   element: <ManualValues /> },
+      {
+        path: "/manual",
+        element: (
+          <RequireAuth>
+            <Manual />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: "/manual/values",
+        element: (
+          <RequireAuth>
+            <ManualValues />
+          </RequireAuth>
+        ),
+      },
       { path: "/results",         element: <LabResultsPage /> },
       { path: "/help",            element: <Help /> },
       { path: "/mentions-legales",element: <MentionsLegales /> },

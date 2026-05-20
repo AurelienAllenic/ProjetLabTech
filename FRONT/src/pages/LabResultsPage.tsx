@@ -1,22 +1,24 @@
 import { useState, useEffect } from "react";
-import { Smile, Frown } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import UiButton from "../components/UiButton";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
+import { apiElementToMedicalResult } from "../lib/analysisResultUi";
 import type { MedicalResult, AnalysisApiResult } from "../types";
 
-export default function LabResultsPage() {
-  const navigate = useNavigate();
+export default function LabResultsPage(): JSX.Element {
   const [focusedResultId, setFocusedResultId] = useState<number | null>(null);
   const [results, setResults] = useState<MedicalResult[]>([]);
+  const [warning, setWarning] = useState<string>("");
   useScrollAnimations();
 
-  const normalCount   = results.filter((r) => r.status === "normal").length;
-  const abnormalCount = results.length - normalCount;
+  const normalCount = results.filter((r) => r.kind === "normal").length;
+  const lowCount = results.filter((r) => r.kind === "low").length;
+  const highCount = results.filter((r) => r.kind === "high").length;
+  const attentionCount = results.filter((r) => r.kind === "attention").length;
 
   useEffect(() => {
     const stored = localStorage.getItem("analysisResult");
@@ -24,22 +26,11 @@ export default function LabResultsPage() {
 
     const parsed = JSON.parse(stored) as AnalysisApiResult;
     const elements = parsed?.result?.elements ?? [];
+    setWarning(typeof parsed?.result?.warning === "string" ? parsed.result.warning : "");
 
-    const mapped: MedicalResult[] = elements.map((el, index) => {
-      const isNormal = el.categorie === "correct" || el.categorie === "normal";
-      return {
-        id:          index + 1,
-        name:        el.nom  ?? "Analyse",
-        value:       el.taux ?? "-",
-        status:      isNormal ? "normal" : "abnormal",
-        resultIcon:  isNormal ? <Smile /> : <Frown />,
-        color:       isNormal ? "border-green-400" : "border-yellow-400",
-        bgColor:     isNormal ? "bg-green-50"      : "bg-yellow-50",
-        statusColor: isNormal ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800",
-        explanation: el.explication ?? "Aucune explication fournie par l'analyse automatique.",
-      };
-    });
-
+    const mapped: MedicalResult[] = elements.map((el, index) =>
+      apiElementToMedicalResult(el, index),
+    );
     setResults(mapped);
   }, []);
 
@@ -47,17 +38,25 @@ export default function LabResultsPage() {
     try {
       const exportElement = document.createElement("div");
       Object.assign(exportElement.style, {
-        position: "absolute", left: "-9999px",
-        backgroundColor: "#ffffff", padding: "30px",
-        width: "210mm", fontFamily: "Arial, sans-serif",
-        lineHeight: "1.6", color: "#333333",
+        position: "absolute",
+        left: "-9999px",
+        backgroundColor: "#ffffff",
+        padding: "30px",
+        width: "210mm",
+        fontFamily: "Arial, sans-serif",
+        lineHeight: "1.6",
+        color: "#333333",
       });
 
       const title = document.createElement("h1");
       title.textContent = "Résultats Médicaux";
       Object.assign(title.style, {
-        fontSize: "28px", fontWeight: "bold", marginBottom: "10px",
-        color: "#1f2937", borderBottom: "3px solid #7c3aed", paddingBottom: "10px",
+        fontSize: "28px",
+        fontWeight: "bold",
+        marginBottom: "10px",
+        color: "#1f2937",
+        borderBottom: "3px solid #7c3aed",
+        paddingBottom: "10px",
       });
       exportElement.appendChild(title);
 
@@ -70,8 +69,10 @@ export default function LabResultsPage() {
       if (resultsSection) {
         const summaryClone = resultsSection.cloneNode(true) as HTMLElement;
         Object.assign(summaryClone.style, {
-          marginBottom: "30px", padding: "15px",
-          backgroundColor: "#f9fafb", borderRadius: "8px",
+          marginBottom: "30px",
+          padding: "15px",
+          backgroundColor: "#f9fafb",
+          borderRadius: "8px",
         });
         const summaryTitle = summaryClone.querySelector<HTMLElement>("h1");
         if (summaryTitle) {
@@ -84,8 +85,11 @@ export default function LabResultsPage() {
       const detailsTitle = document.createElement("h2");
       detailsTitle.textContent = "Résultats Détaillés";
       Object.assign(detailsTitle.style, {
-        fontSize: "20px", fontWeight: "bold",
-        marginTop: "30px", marginBottom: "20px", color: "#1f2937",
+        fontSize: "20px",
+        fontWeight: "bold",
+        marginTop: "30px",
+        marginBottom: "20px",
+        color: "#1f2937",
       });
       exportElement.appendChild(detailsTitle);
 
@@ -94,38 +98,34 @@ export default function LabResultsPage() {
         mainContent.querySelectorAll<HTMLElement>("article").forEach((article) => {
           const clone = article.cloneNode(true) as HTMLElement;
           Object.assign(clone.style, {
-            marginBottom: "20px", padding: "20px",
-            border: "1px solid #e5e7eb", borderRadius: "8px",
-            pageBreakInside: "avoid", boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+            marginBottom: "20px",
+            padding: "20px",
+            border: "1px solid #e5e7eb",
+            borderRadius: "8px",
+            pageBreakInside: "avoid",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
           });
           const h3 = clone.querySelector<HTMLElement>("h3");
-          if (h3) { h3.style.fontSize = "16px"; h3.style.marginBottom = "10px"; h3.style.color = "#1f2937"; }
-
-          clone.querySelectorAll<HTMLElement>("p").forEach((p) => {
-            if (p.textContent?.match(/^\d+(\.\d+)?$/)) {
-              Object.assign(p.style, { fontSize: "28px", fontWeight: "bold", color: "#7c3aed" });
-            }
-          });
-          clone.querySelectorAll<HTMLElement>("span").forEach((badge) => {
-            const txt = badge.textContent ?? "";
-            if (txt.includes("Normal") || txt.includes("Abnormal")) {
-              Object.assign(badge.style, {
-                display: "inline-block", padding: "8px 12px",
-                borderRadius: "20px", fontSize: "12px", fontWeight: "bold",
-                backgroundColor: txt.includes("Normal") ? "#d1fae5" : "#fef3c7",
-                color: txt.includes("Normal") ? "#065f46" : "#92400e",
-              });
-            }
-          });
-          clone.querySelectorAll<HTMLElement>("[class*='bg-']").forEach((exp) => {
-            Object.assign(exp.style, { backgroundColor: "#f3f4f6", padding: "15px", borderRadius: "6px", marginTop: "15px", fontSize: "13px" });
+          if (h3) {
+            h3.style.fontSize = "16px";
+            h3.style.marginBottom = "10px";
+            h3.style.color = "#1f2937";
+          }
+          clone.querySelectorAll<HTMLElement>("dd.result-value-large").forEach((dd) => {
+            Object.assign(dd.style, { fontSize: "22px", fontWeight: "bold", color: "#1f2937" });
           });
           exportElement.appendChild(clone);
         });
       }
 
       const footerEl = document.createElement("div");
-      Object.assign(footerEl.style, { marginTop: "40px", paddingTop: "20px", borderTop: "1px solid #e5e7eb", fontSize: "11px", color: "#666666" });
+      Object.assign(footerEl.style, {
+        marginTop: "40px",
+        paddingTop: "20px",
+        borderTop: "1px solid #e5e7eb",
+        fontSize: "11px",
+        color: "#666666",
+      });
       footerEl.innerHTML = `
         <p style="margin:5px 0"><strong>Avis Important:</strong> Ce document est à titre informatif uniquement.</p>
         <p style="margin:5px 0">Consultez toujours un professionnel de santé pour interpréter vos résultats.</p>
@@ -134,19 +134,22 @@ export default function LabResultsPage() {
       document.body.appendChild(exportElement);
 
       const canvas = await html2canvas(exportElement, {
-        scale: 2, useCORS: true, logging: false,
-        backgroundColor: "#ffffff", allowTaint: true,
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        allowTaint: true,
         ignoreElements: (element) => element.tagName === "SCRIPT" || element.tagName === "STYLE",
       });
       document.body.removeChild(exportElement);
 
-      const imgData   = canvas.toDataURL("image/png");
-      const pdf       = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const imgWidth  = 210;
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const imgWidth = 210;
       const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft  = imgHeight;
-      let position    = 0;
+      let heightLeft = imgHeight;
+      let position = 0;
 
       pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
@@ -182,40 +185,91 @@ export default function LabResultsPage() {
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="w-full h-full">
           <div className="mt-24 flex justify-end">
-            <a
-              href="/help"
+            <Link
+              to="/help"
               className="px-6 py-2 bg-raspberry-600 text-white rounded-full font-semibold hover:bg-raspberry-500 focus:outline-none focus:ring-2 focus:ring-raspberry-400 focus:ring-offset-2 transition"
-              aria-label="Aide"
             >
-              Help
-            </a>
+              Aide
+            </Link>
           </div>
 
           <section data-animate data-animate-variant="fade-up" className="p-6 mb-6" aria-label="Résumé des résultats">
             <div className="flex items-start gap-3 mb-4">
-              <button
-                onClick={() => navigate("/help")}
-                className="w-8 h-8 bg-raspberry-600 rounded-xl flex items-center justify-center text-white text-lg focus:outline-none focus:ring-2 focus:ring-raspberry-400 focus:ring-offset-2 transition"
-                aria-label="Accéder à l'aide médicale"
-              >
-                🏥
-              </button>
               <div className="flex-1">
-                <h1 className="font-bold text-gray-900 text-2xl">Vos Résultats</h1>
+                <h1 className="font-bold text-gray-900 text-2xl">Vos résultats</h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  Synthèse issue de l&apos;analyse : valeur mesurée, intervalle de référence et interprétation.
+                </p>
               </div>
             </div>
 
+            {warning ? (
+              <div
+                role="status"
+                className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+              >
+                {warning}
+              </div>
+            ) : null}
+
             <div className="space-y-3" role="region" aria-label="Résumé du statut des résultats">
               {normalCount > 0 && (
-                <div className="flex items-start gap-2 text-green-700 bg-green-50 p-3 rounded-lg" role="status" tabIndex={0} aria-label={`${normalCount} valeur(s) normale(s)`}>
-                  <span className="mt-0.5" aria-hidden="true">✅</span>
-                  <span className="text-sm">{normalCount} valeur{normalCount > 1 ? "s" : ""} normale{normalCount > 1 ? "s" : ""}.</span>
+                <div
+                  className="flex items-start gap-2 text-green-800 bg-green-50 p-3 rounded-lg border border-green-100"
+                  role="status"
+                  aria-label={`${normalCount} valeur(s) dans la norme`}
+                >
+                  <span className="mt-0.5" aria-hidden="true">
+                    ✓
+                  </span>
+                  <span className="text-sm">
+                    <strong>{normalCount}</strong> paramètre{normalCount > 1 ? "s" : ""} dans la norme de référence.
+                  </span>
                 </div>
               )}
-              {abnormalCount > 0 && (
-                <div className="flex items-start gap-2 text-yellow-700 bg-yellow-50 p-3 rounded-lg" role="status" tabIndex={0} aria-label={`${abnormalCount} valeur(s) à surveiller`}>
-                  <span className="mt-0.5" aria-hidden="true">⚠️</span>
-                  <span className="text-sm">{abnormalCount} valeur{abnormalCount > 1 ? "s" : ""} à surveiller. Consultez un professionnel de santé.</span>
+              {lowCount > 0 && (
+                <div
+                  className="flex items-start gap-2 text-blue-900 bg-blue-50 p-3 rounded-lg border border-blue-100"
+                  role="status"
+                  aria-label={`${lowCount} valeur(s) trop basses`}
+                >
+                  <span className="mt-0.5" aria-hidden="true">
+                    ↓
+                  </span>
+                  <span className="text-sm">
+                    <strong>{lowCount}</strong> résultat{lowCount > 1 ? "s" : ""} sous la référence (trop bas). À
+                    interpréter avec un professionnel de santé.
+                  </span>
+                </div>
+              )}
+              {highCount > 0 && (
+                <div
+                  className="flex items-start gap-2 text-orange-900 bg-orange-50 p-3 rounded-lg border border-orange-100"
+                  role="status"
+                  aria-label={`${highCount} valeur(s) trop élevées`}
+                >
+                  <span className="mt-0.5" aria-hidden="true">
+                    ↑
+                  </span>
+                  <span className="text-sm">
+                    <strong>{highCount}</strong> résultat{highCount > 1 ? "s" : ""} au-dessus de la référence (trop
+                    élevé). À faire suivre médicalement si besoin.
+                  </span>
+                </div>
+              )}
+              {attentionCount > 0 && (
+                <div
+                  className="flex items-start gap-2 text-amber-900 bg-amber-50 p-3 rounded-lg border border-amber-100"
+                  role="status"
+                  aria-label={`${attentionCount} valeur(s) à surveiller`}
+                >
+                  <span className="mt-0.5" aria-hidden="true">
+                    ⚠
+                  </span>
+                  <span className="text-sm">
+                    <strong>{attentionCount}</strong> mesure{attentionCount > 1 ? "s" : ""} hors normes ou à préciser —
+                    à surveiller avec votre médecin ou votre biologiste.
+                  </span>
                 </div>
               )}
             </div>
@@ -223,7 +277,9 @@ export default function LabResultsPage() {
 
           <main id="main-content" className="space-y-4" data-animate-group>
             {results.length === 0 && (
-              <p className="text-gray-600 text-sm">Aucun résultat détecté automatiquement dans ce document.</p>
+              <p className="text-gray-600 text-sm">
+                Aucun résultat détecté automatiquement dans ce document.
+              </p>
             )}
             {results.map((result) => (
               <article
@@ -240,21 +296,37 @@ export default function LabResultsPage() {
                 role="region"
                 aria-label={`Résultat: ${result.name}`}
               >
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
+                <div className="p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
+                    <div className="min-w-0 flex-1">
                       <h3 className="font-bold text-gray-900 text-lg">{result.name}</h3>
-                      <div className="flex items-center">
-                        <p className="text-3xl font-bold text-gray-900 mt-1">{result.value}</p>
-                        <div className="mx-4" role="img">{result.resultIcon}</div>
-                      </div>
+                      <dl className="mt-3 grid gap-3 text-sm">
+                        <div>
+                          <dt className="text-gray-500 font-medium">Valeur mesurée</dt>
+                          <dd className="result-value-large mt-1 text-2xl font-bold text-gray-900 tracking-tight">
+                            {result.value}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Intervalle de référence</dt>
+                          <dd className="mt-1 text-gray-800">{result.referenceRange}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-500 font-medium">Catégorie (API)</dt>
+                          <dd className="mt-1">
+                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${result.statusColor}`}>
+                              {result.categoryLabel}
+                            </span>
+                          </dd>
+                        </div>
+                      </dl>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${result.statusColor}`}>
-                      {result.status === "normal" ? "✓ Normal" : "⚠ À surveiller"}
+                    <span className="shrink-0 flex items-start justify-center sm:pt-1" aria-hidden="true">
+                      {result.resultIcon}
                     </span>
                   </div>
-                  <div className={`${result.bgColor} p-4 rounded-lg`}>
-                    <h4 className="font-semibold text-gray-900 text-sm mb-2">Interprétation :</h4>
+                  <div className={`${result.bgColor} p-4 rounded-lg mt-4 border border-black/5`}>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-2">Interprétation</h4>
                     <p className="text-sm text-gray-700 leading-relaxed">{result.explanation}</p>
                   </div>
                 </div>
@@ -262,14 +334,20 @@ export default function LabResultsPage() {
             ))}
           </main>
 
-          <nav data-animate data-animate-variant="fade-up" className="flex flex-wrap gap-4 mt-8" aria-label="Navigation des résultats">
-            <UiButton bg="white" text="raspberry">
-              <a href="/" className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current rounded px-2 py-1">
-                ← Retour à l'accueil
-              </a>
-            </UiButton>
-            <UiButton bg="raspberry" text="white" onClick={() => void handlePDFExport()} aria-label="Exporter les résultats en PDF">
-              ↓ Export en PDF
+          <nav
+            data-animate
+            data-animate-variant="fade-up"
+            className="flex flex-wrap gap-4 mt-8"
+            aria-label="Navigation des résultats"
+          >
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-full font-medium transition shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-raspberry-400 bg-white hover:bg-raspberry-50 border border-raspberry-300 text-raspberry-700"
+            >
+              ← Retour à l&apos;accueil
+            </Link>
+            <UiButton bg="raspberry" text="white" type="button" onClick={() => void handlePDFExport()}>
+              Export en PDF
             </UiButton>
           </nav>
         </div>

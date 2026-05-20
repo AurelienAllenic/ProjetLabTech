@@ -1,6 +1,35 @@
 import fetch from "node-fetch";
 import type { MistralApiResponse } from "../types.js";
 
+function getMistralApiKey(): string {
+  const key = process.env.MISTRAL_API_KEY ?? process.env.API_KEY;
+  if (!key?.trim()) {
+    throw new Error(
+      "Clé API Mistral absente : définissez API_KEY ou MISTRAL_API_KEY dans backend/.env",
+    );
+  }
+  return key.trim();
+}
+
+/** Corps d’erreur Mistral : souvent `{ message, type, code }` à la racine, pas `{ error: { message } }`. */
+function mistralErrorMessage(status: number, body: unknown, rawText: string): string {
+  if (body && typeof body === "object") {
+    const o = body as Record<string, unknown>;
+    if (typeof o.message === "string" && o.message.trim()) {
+      return o.message.trim();
+    }
+    const err = o.error;
+    if (err && typeof err === "object") {
+      const nested = (err as Record<string, unknown>).message;
+      if (typeof nested === "string" && nested.trim()) {
+        return nested.trim();
+      }
+    }
+  }
+  const trimmed = rawText.trim().slice(0, 400);
+  return trimmed || `Erreur HTTP ${status} depuis l'API Mistral`;
+}
+
 const PROMPT_TEMPLATE = `
 Tu dois répondre STRICTEMENT avec un JSON valide et COMPLET.
 Aucun texte avant ou après.
@@ -39,11 +68,12 @@ Analyse le texte suivant :
 
 export async function generateTextFromPdf(pdfText: string): Promise<string> {
   const prompt = PROMPT_TEMPLATE.replace("{{TEXT_FROM_PDF}}", pdfText);
+  const apiKey = getMistralApiKey();
 
   const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -54,11 +84,26 @@ export async function generateTextFromPdf(pdfText: string): Promise<string> {
     }),
   });
 
-  const data = (await response.json()) as MistralApiResponse;
+  const rawText = await response.text();
+  let parsed: unknown;
+  try {
+    parsed = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    console.error(
+      "[Mistral] Réponse non-JSON (HTTP %s): %s",
+      response.status,
+      rawText.slice(0, 500),
+    );
+    throw new Error(`Réponse Mistral invalide (HTTP ${response.status})`);
+  }
 
   if (!response.ok) {
-    throw new Error(data.error?.message ?? "Erreur API Mistral");
+    const msg = mistralErrorMessage(response.status, parsed, rawText);
+    console.error("[Mistral] HTTP %s — %s", response.status, msg);
+    throw new Error(msg);
   }
+
+  const data = parsed as MistralApiResponse;
 
   let content = data.choices?.[0]?.message?.content ?? "";
   content = content.replace(/```json/gi, "").replace(/```/g, "").trim();

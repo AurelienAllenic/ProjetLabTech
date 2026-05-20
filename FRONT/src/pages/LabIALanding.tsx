@@ -195,6 +195,14 @@ export default function LabIALanding() {
     navigate("/upload");
   }, [user, navigate]);
 
+  const goToManual = useCallback((): void => {
+    if (!user) {
+      navigate("/login", { state: { from: "/manual" } });
+      return;
+    }
+    navigate("/manual");
+  }, [user, navigate]);
+
   return (
     <div className="min-h-screen bg-white text-gray-800 overflow-x-hidden">
       <Header />
@@ -256,7 +264,7 @@ export default function LabIALanding() {
                   </span>
                   <ArrowRight size={16} className="ml-auto text-gray-300 group-hover:text-raspberry-500 transition" aria-hidden="true" />
                 </button>
-                <button type="button" onClick={() => navigate("/manual")} aria-label="Saisir les résultats manuellement"
+                <button type="button" onClick={goToManual} aria-label="Saisir les résultats manuellement"
                   className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-sm hover:shadow-md hover:border-raspberry-300 transition text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-raspberry-400 group"
                 >
                   <span className="w-10 h-10 rounded-xl bg-blue-100 text-raspberry-700 flex items-center justify-center shrink-0 group-hover:bg-blue-200 transition">
@@ -416,7 +424,7 @@ export default function LabIALanding() {
               >
                 <UploadCloud size={18} aria-hidden="true" /> Téléverser un PDF
               </button>
-              <button type="button" onClick={() => navigate("/manual")}
+              <button type="button" onClick={goToManual}
                 className="flex items-center gap-2 bg-white/10 text-white border border-white/30 px-6 py-3 rounded-full font-semibold hover:bg-white/20 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 <PenLine size={18} aria-hidden="true" /> Saisie manuelle
