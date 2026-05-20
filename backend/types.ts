@@ -41,6 +41,8 @@ declare global {
   namespace Express {
     interface Request {
       user?: JwtPayload;
+      originalImageBuffer?: Buffer;
+      originalImageMimeType?: string;
     }
   }
 }
