@@ -1,10 +1,10 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { Link } from "react-router-dom";
-import { UploadCloud, PenLine, LogOut, Download } from "lucide-react";
+import { UploadCloud, PenLine, Download } from "lucide-react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import UiButton from "../../components/UiButton";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useScrollAnimations } from "../../hooks/useScrollAnimations";
 import { apiGet } from "../../lib/api";
@@ -18,7 +18,7 @@ interface MyAssignmentApi {
 }
 
 export default function UserLaboDashboard(): ReactElement | null {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   useScrollAnimations();
   usePageTitle("Mon espace laboratoire");
 
@@ -66,25 +66,14 @@ export default function UserLaboDashboard(): ReactElement | null {
       <Header />
 
       <main id="main-content" role="main" className="flex-1 px-4 pt-28 pb-16 max-w-5xl mx-auto w-full">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-10">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-raspberry-600 mb-1">
-              Utilisateur laboratoire
-            </p>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Bonjour, {user.displayName}
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">{user.email}</p>
-          </div>
-          <UiButton
-            type="button"
-            bg="white"
-            text="raspberry"
-            onClick={logout}
-            className="flex items-center gap-2 shrink-0"
-          >
-            <LogOut size={18} aria-hidden="true" /> Déconnexion
-          </UiButton>
+        <div className="mb-10">
+          <p className="text-xs font-semibold uppercase tracking-wide text-raspberry-600 mb-1">
+            Utilisateur laboratoire
+          </p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Bonjour, {user.displayName}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">{user.email}</p>
         </div>
 
         <p className="text-sm text-gray-600 mb-6 max-w-2xl">

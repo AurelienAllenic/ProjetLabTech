@@ -5,7 +5,7 @@ import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
 import { useScrollAnimations } from "../hooks/useScrollAnimations";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import {
   Import, Brain, FilePlusCorner, File,
   Keyboard, Eye, Headphones, Accessibility,

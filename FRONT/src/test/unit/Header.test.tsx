@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type * as ReactRouterDom from "react-router-dom";
-import Header from "../../components/Header";import { wrapWithRouterAndAuth } from "../authTestUtils";
+import Header from "../../components/Header";
+import { wrapWithRouterAndAuth } from "../authTestUtils";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async (importOriginal) => {

@@ -1,5 +1,13 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import DOMMatrix from "dommatrix";
+
+/** pdfjs-dist (canvas) attend DOMMatrix, absent dans l’environnement Vitest/jsdom. */
+Object.defineProperty(globalThis, "DOMMatrix", {
+  value: DOMMatrix,
+  writable: true,
+  configurable: true,
+});
 
 /** Rend le contenu [data-animate] visible sous Vitest (animations mockées, sinon opacity: 0 masque tout aux queries RTL). */
 Object.defineProperty(window, "matchMedia", {
