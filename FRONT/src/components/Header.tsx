@@ -1,16 +1,23 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import UiButton from "./UiButton";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Header() {
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const isResults = location.pathname === "/results";
+  const { user, logout } = useAuth();
+
+  const handleLogout = (): void => {
+    logout();
+    navigate("/", { replace: true });
+  };
 
   return (
     <>
       <a
         href="#main-content"
-        className="absolute top-0 left-0 z-[100] -translate-y-full focus:translate-y-0 transition-transform bg-white text-raspberry-900 px-4 py-2 rounded-br-md shadow-lg focus:outline-none focus:ring-2 focus:ring-raspberry-500"
+        className="absolute top-0 left-0 z-100 -translate-y-full focus:translate-y-0 transition-transform bg-white text-raspberry-900 px-4 py-2 rounded-br-md shadow-lg focus:outline-none focus:ring-2 focus:ring-raspberry-500"
       >
         Aller au contenu principal
       </a>
@@ -40,8 +47,11 @@ export default function Header() {
           </div>
         </button>
 
-        <nav className="flex items-center gap-3" aria-label="Actions principales de l'en-tête">
-          {isResults && (
+        <nav
+          className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 shrink-0"
+          aria-label="Actions principales de l'en-tête"
+        >
+          {isResults ? (
             <UiButton
               bg="raspberry"
               text="white"
@@ -50,7 +60,19 @@ export default function Header() {
             >
               Nouvelle analyse
             </UiButton>
-          )}
+          ) : null}
+          {user ? (
+            <UiButton
+              type="button"
+              bg="white"
+              text="raspberry"
+              aria-label="Se déconnecter"
+              onClick={handleLogout}
+              className="shrink-0"
+            >
+              Déconnexion
+            </UiButton>
+          ) : null}
         </nav>
       </header>
     </>
