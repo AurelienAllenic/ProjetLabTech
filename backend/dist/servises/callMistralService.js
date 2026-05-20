@@ -66,15 +66,11 @@ Format OBLIGATOIRE :
     }
   ]
 }
-`;
-const PROMPT_TEMPLATE = `${SHARED_RULES}
+
 Analyse le texte suivant :
 """
 {{TEXT_FROM_PDF}}
 """
-`;
-const PROMPT_TEMPLATE_IMAGE = `${SHARED_RULES}
-Analyse le résultat d'analyse de laboratoire visible dans cette image.
 `;
 export async function generateTextFromPdf(pdfText) {
     const prompt = PROMPT_TEMPLATE.replace("{{TEXT_FROM_PDF}}", pdfText);
@@ -110,51 +106,5 @@ export async function generateTextFromPdf(pdfText) {
     let content = data.choices?.[0]?.message?.content ?? "";
     content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
     console.log("🧠 IA RAW LENGTH:", content.length);
-    return content;
-}
-export async function generateTextFromImage(base64, mimeType) {
-    const apiKey = getMistralApiKey();
-    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            model: "pixtral-12b-2409",
-            messages: [
-                {
-                    role: "user",
-                    content: [
-                        {
-                            type: "image_url",
-                            image_url: { url: `data:${mimeType};base64,${base64}` },
-                        },
-                        { type: "text", text: PROMPT_TEMPLATE_IMAGE },
-                    ],
-                },
-            ],
-            temperature: 0.2,
-            max_tokens: 3000,
-        }),
-    });
-    const rawText = await response.text();
-    let parsed;
-    try {
-        parsed = rawText ? JSON.parse(rawText) : {};
-    }
-    catch {
-        console.error("[Mistral Vision] Réponse non-JSON (HTTP %s): %s", response.status, rawText.slice(0, 500));
-        throw new Error(`Réponse Mistral Vision invalide (HTTP ${response.status})`);
-    }
-    if (!response.ok) {
-        const msg = mistralErrorMessage(response.status, parsed, rawText);
-        console.error("[Mistral Vision] HTTP %s — %s", response.status, msg);
-        throw new Error(msg);
-    }
-    const data = parsed;
-    let content = data.choices?.[0]?.message?.content ?? "";
-    content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
-    console.log("🧠 IA Vision RAW LENGTH:", content.length);
     return content;
 }

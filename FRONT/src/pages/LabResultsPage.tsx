@@ -451,6 +451,9 @@ export default function LabResultsPage(): JSX.Element {
           </main>
 
           <nav
+            data-animate
+            data-animate-once
+            data-animate-variant="fade-up"
             className="flex flex-wrap gap-4 mt-8"
             aria-label="Navigation des résultats"
           >

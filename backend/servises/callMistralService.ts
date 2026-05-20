@@ -11,7 +11,7 @@ function getMistralApiKey(): string {
   return key.trim();
 }
 
-/** Corps d'erreur Mistral : souvent `{ message, type, code }` à la racine, pas `{ error: { message } }`. */
+/** Corps d’erreur Mistral : souvent `{ message, type, code }` à la racine, pas `{ error: { message } }`. */
 function mistralErrorMessage(status: number, body: unknown, rawText: string): string {
   if (body && typeof body === "object") {
     const o = body as Record<string, unknown>;
@@ -30,7 +30,7 @@ function mistralErrorMessage(status: number, body: unknown, rawText: string): st
   return trimmed || `Erreur HTTP ${status} depuis l'API Mistral`;
 }
 
-const SHARED_RULES = `
+const PROMPT_TEMPLATE = `
 Tu dois répondre STRICTEMENT avec un JSON valide et COMPLET.
 Aucun texte avant ou après.
 
@@ -72,17 +72,11 @@ Format OBLIGATOIRE :
     }
   ]
 }
-`;
 
-const PROMPT_TEMPLATE = `${SHARED_RULES}
 Analyse le texte suivant :
 """
 {{TEXT_FROM_PDF}}
 """
-`;
-
-const PROMPT_TEMPLATE_IMAGE = `${SHARED_RULES}
-Analyse le résultat d'analyse de laboratoire visible dans cette image.
 `;
 
 export async function generateTextFromPdf(pdfText: string): Promise<string> {
@@ -123,60 +117,11 @@ export async function generateTextFromPdf(pdfText: string): Promise<string> {
   }
 
   const data = parsed as MistralApiResponse;
+
   let content = data.choices?.[0]?.message?.content ?? "";
   content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
 
   console.log("🧠 IA RAW LENGTH:", content.length);
-  return content;
-}
 
-export async function generateTextFromImage(base64: string, mimeType: string): Promise<string> {
-  const apiKey = getMistralApiKey();
-
-  const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "pixtral-12b-2409",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image_url",
-              image_url: { url: `data:${mimeType};base64,${base64}` },
-            },
-            { type: "text", text: PROMPT_TEMPLATE_IMAGE },
-          ],
-        },
-      ],
-      temperature: 0.2,
-      max_tokens: 3000,
-    }),
-  });
-
-  const rawText = await response.text();
-  let parsed: unknown;
-  try {
-    parsed = rawText ? JSON.parse(rawText) : {};
-  } catch {
-    console.error("[Mistral Vision] Réponse non-JSON (HTTP %s): %s", response.status, rawText.slice(0, 500));
-    throw new Error(`Réponse Mistral Vision invalide (HTTP ${response.status})`);
-  }
-
-  if (!response.ok) {
-    const msg = mistralErrorMessage(response.status, parsed, rawText);
-    console.error("[Mistral Vision] HTTP %s — %s", response.status, msg);
-    throw new Error(msg);
-  }
-
-  const data = parsed as MistralApiResponse;
-  let content = data.choices?.[0]?.message?.content ?? "";
-  content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
-
-  console.log("🧠 IA Vision RAW LENGTH:", content.length);
   return content;
 }
